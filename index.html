@@ -1,0 +1,1450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Beginner classroom simulations for practicing collaborative active learning techniques.">
+<title>Active Learning Sims</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lexend:wght@500;600;700&display=swap">
+<style>
+/* Layout: home = grouped technique cards; sim = classroom canvas left, one step card right; stacks on phones */
+:root{
+  --bg:#ffffff; --surface:#ffffff; --surface-2:#f7f7f7; --floor:#fafafa; --ink:#1f2328; --muted:#5c6066; --line:#dcdcd9;
+  --accent:#1f4e79; --accent-ink:#ffffff; --dot-ink:#14212b; --stu:#b3b5b9; --note:#ffe27a;
+  --sdt:#56b4e9; --ev:#e69f00; --attr:#e8774a; --goal:#d98cb8;
+  --good:#2e7d4f; --mid:#8f5f00; --bad:#b23a2e;
+  --good-bg:#e6f2ea; --mid-bg:#fbf1dc; --bad-bg:#fbe8e5;
+  --display:"Lexend", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141517; --surface:#1c1d20; --surface-2:#232528; --floor:#202225; --ink:#ececec; --muted:#a2a5aa; --line:#35373b;
+  --accent:#8db8e3; --accent-ink:#0e1a26; --dot-ink:#14212b; --stu:#94979c; --note:#e8cb5a;
+  --sdt:#56b4e9; --ev:#e69f00; --attr:#e8774a; --goal:#d98cb8;
+  --good:#6fcf97; --mid:#e8b450; --bad:#f08a7e;
+  --good-bg:#17301f; --mid-bg:#33280f; --bad-bg:#3a1d19; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141517; --surface:#1c1d20; --surface-2:#232528; --floor:#202225; --ink:#ececec; --muted:#a2a5aa; --line:#35373b;
+  --accent:#8db8e3; --accent-ink:#0e1a26; --dot-ink:#14212b; --stu:#94979c; --note:#e8cb5a;
+  --sdt:#56b4e9; --ev:#e69f00; --attr:#e8774a; --goal:#d98cb8;
+  --good:#6fcf97; --mid:#e8b450; --bad:#f08a7e;
+  --good-bg:#17301f; --mid-bg:#33280f; --bad-bg:#3a1d19; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.wrap{max-width:1120px;margin:0 auto;display:grid;gap:20px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(1.6rem,3.2vw,2.2rem);font-weight:600;letter-spacing:-.02em}
+h2{font-size:1.4rem;font-weight:600;letter-spacing:-.01em}
+h3{font-size:1rem;font-weight:700}
+p{margin:0}
+.sub{color:var(--muted);max-width:62ch}
+header{display:grid;gap:14px}
+
+.stepper{display:flex;flex-wrap:wrap;gap:6px;list-style:none;padding:0;margin:0}
+.stepper li{font-size:.82rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:6px 12px;border-radius:999px;
+  border:1px solid var(--line);color:var(--muted);background:var(--surface)}
+.stepper li.done{color:var(--ink)}
+.stepper li.now{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.side{display:grid;gap:20px;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;min-width:0}
+.panel.main{display:grid;gap:18px}
+.eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+
+.dialogue{display:grid;gap:10px}
+.line{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.8rem;color:#fff;font-family:var(--display)}
+.bubble{background:var(--surface-2);border:1px solid var(--line);border-radius:4px 12px 12px 12px;padding:8px 12px}
+.bubble b{display:block;font-size:.8rem;color:var(--muted)}
+
+.options{display:grid;gap:10px}
+.opt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start;text-align:left;width:100%;
+  font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;transition:border-color .15s, background .15s}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt:focus-visible,.btn:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.opt .k{font-family:var(--display);font-weight:700;width:26px;height:26px;border-radius:6px;display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--line);font-size:.85rem}
+.opt:disabled{cursor:default;opacity:.55}
+.opt.picked{opacity:1;border-color:var(--accent);background:var(--surface-2)}
+
+.fb{border-radius:10px;padding:16px;display:grid;gap:8px;border:1px solid var(--line)}
+.fb.strong{background:var(--good-bg)} .fb.mixed{background:var(--mid-bg)} .fb.weak{background:var(--bad-bg)}
+.pill{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid currentColor}
+.pill.strong{color:var(--good)} .pill.mixed{color:var(--mid)} .pill.weak{color:var(--bad)}
+.deltas{display:flex;flex-wrap:wrap;gap:12px;font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.up{color:var(--good);font-weight:700} .down{color:var(--bad);font-weight:700}
+
+.btn{font:inherit;font-weight:700;border:0;border-radius:10px;padding:11px 18px;background:var(--accent);color:var(--accent-ink);cursor:pointer;justify-self:start}
+.btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:10px}
+
+.meters{display:grid;gap:14px}
+.meter{display:grid;gap:5px}
+.meter .top{display:flex;justify-content:space-between;font-size:.9rem;font-weight:700;font-variant-numeric:tabular-nums}
+.meter .top span:last-child{color:var(--muted)}
+.bar{height:8px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .5s ease}
+.meter small{color:var(--muted);font-size:.8rem}
+
+.map{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.table{border:1px dashed var(--line);border-radius:10px;padding:10px;display:grid;gap:8px;background:var(--surface-2)}
+.table h3{font-size:.85rem}
+.seats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.seat{display:flex;align-items:center;gap:6px;font-size:.8rem;min-width:0}
+.seat .dot{width:14px;height:14px;border-radius:50%;flex:none}
+.seat span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seat.focus span{font-weight:700}
+.seat.focus .dot{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:.78rem;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+details{border-top:1px solid var(--line);padding-block:10px}
+details:first-of-type{border-top:0}
+summary{cursor:pointer;font-weight:700;display:flex;align-items:center;gap:8px}
+summary .dot{width:12px;height:12px;border-radius:50%}
+details p{margin-top:8px;font-size:.92rem}
+details p.miss{color:var(--muted)}
+
+.recap{display:grid;gap:10px}
+.recap-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:12px 0;border-top:1px solid var(--line)}
+.recap-item p{font-size:.9rem;color:var(--muted)}
+.list{margin:0;padding-left:20px;display:grid;gap:6px}
+.line.you .bubble{background:var(--surface);border-color:var(--accent);border-radius:12px 4px 12px 12px}
+.narr{font-style:italic;color:var(--muted);font-size:.93rem;padding-left:44px}
+.coach{border-radius:10px;padding:14px 16px;display:grid;gap:6px;border:1px solid var(--line);margin-left:44px}
+.coach.strong{background:var(--good-bg)} .coach.mixed{background:var(--mid-bg)} .coach.weak{background:var(--bad-bg)}
+@media (max-width:520px){.narr,.coach{padding-left:0;margin-left:0}.coach{padding-left:14px}}
+.composer{display:grid;gap:10px}
+.composer label{font-weight:700}
+textarea{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:12px;min-height:96px;resize:vertical;width:100%}
+textarea:focus-visible{outline:3px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.hint{font-size:.85rem;color:var(--muted)}
+.notice{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:12px 14px;font-size:.9rem}
+.err{color:var(--bad);font-size:.9rem}
+.thinking{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.93rem;padding-left:44px}
+.thinking i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:blink 1.2s infinite}
+.thinking i:nth-child(2){animation-delay:.2s}.thinking i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.examples{display:grid;gap:6px;margin-top:8px}
+.ex{font:inherit;font-size:.88rem;text-align:left;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer}
+.ex:hover{border-color:var(--accent)}
+.mode{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--good)}
+.mode i{width:8px;height:8px;border-radius:50%;background:currentColor}
+.mode.off{color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.roompanel{display:grid;gap:12px}
+#room{display:block;width:100%;aspect-ratio:800/580;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);touch-action:manipulation;cursor:pointer}
+#room:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.controls{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.85rem;color:var(--muted)}
+kbd{font-family:inherit;font-size:.78rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 6px;background:var(--surface);color:var(--ink)}
+@media (min-width:821px){.roompanel{position:sticky;top:16px}}
+
+.stepnum{font-family:var(--display);font-weight:700;font-size:2.4rem;line-height:1;color:var(--accent)}
+.tip{font-size:.92rem;color:var(--muted);border-left:3px solid var(--line);padding-left:12px}
+.opt.right{border-color:var(--good);background:var(--good-bg);opacity:1}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg);opacity:1}
+.stepper button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;letter-spacing:inherit;text-transform:inherit}
+.stepper li:has(button:hover){border-color:var(--accent)}
+.stepper button:focus-visible{outline:3px solid var(--accent);outline-offset:4px;border-radius:4px}
+.navrow{border-top:1px solid var(--line);padding-top:14px}
+.checklist{display:grid;gap:8px}
+.ck-head{display:grid;gap:6px;margin-bottom:4px}
+.ck{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.ck-name{display:flex;align-items:center;gap:8px;font-weight:700;min-width:0}
+.ck-name i{width:12px;height:12px;border-radius:50%;flex:none}
+.ck .ex{padding:6px 14px}
+.steps-list{margin:0;padding-left:22px;display:grid;gap:8px}
+a{color:var(--accent)}
+
+.hgroup{display:grid;gap:12px}
+.hgroup h2{font-size:1.25rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.card{display:grid;gap:6px;align-content:start;text-decoration:none;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:16px;transition:border-color .15s}
+.card:hover{border-color:var(--accent)}
+.card:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.card-name{font-family:var(--display);font-weight:700;font-size:1.12rem}
+.card-blurb{font-size:.93rem;color:var(--muted)}
+.card-meta{font-size:.78rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.card-go{font-weight:700;color:var(--accent);margin-top:2px}
+#home{display:grid;gap:28px}
+#home[hidden],#simview[hidden]{display:none!important}
+.facts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;margin:10px 0 6px;font-size:.9rem}
+.facts dt{font-weight:700} .facts dd{margin:0;color:var(--muted)}
+.ext{display:inline-block;margin-top:10px;font-weight:700;font-size:.92rem}
+a.btn{text-decoration:none;display:inline-block}
+.btn.small{padding:7px 12px;font-size:.88rem}
+</style>
+<style>[hidden]{display:none!important} img{max-width:100%} body{margin:0}</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><button class="btn ghost small" id="homeBtn" hidden>← All techniques</button></div>
+    <div class="eyebrow" id="eyebrow">Beginner walkthroughs</div>
+    <h1 id="h1">Active Learning Sims</h1>
+    <p class="sub" id="sub"></p>
+    <ol class="stepper" id="stepper" hidden></ol>
+  </header>
+
+  <div id="home"></div>
+
+  <div class="grid" id="simview" hidden>
+    <section class="panel roompanel">
+      <canvas id="room" tabindex="0" aria-label="Top-down classroom with 16 students. Click a glowing spot, or press Space, to walk the teacher there."></canvas>
+      <div class="legend" id="legend" style="margin-top:0"></div>
+    </section>
+    <aside class="side">
+      <section class="panel main" id="stage" aria-live="polite"></section>
+      <div class="panel" id="about"></div>
+    </aside>
+  </div>
+</div>
+
+<script>
+/* ===================== Shared class, room and layouts ===================== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const W = 800, H = 580, SPEED = 240;
+const BOARD = {x:160, y:16, w:480, h:58}, TOP = {x:400, y:106};
+const TEAMS = [["Maya","Jordan","Marcus","Lena"],["Daniel","Priya","Sam","Hannah"],["Omar","Grace","Leo","Fatima"],["Elena","Chris","Aisha","Noah"]];
+const ALL = TEAMS.flat();
+const TEAM_OF = {}; TEAMS.forEach((t,i)=>t.forEach(n=>TEAM_OF[n]=i));
+const KEYS = ["sdt","ev","attr","goal"];
+const O = (t, ok, f) => ({t, ok:!!ok, f});
+const GROUP_LEGEND = [["Group 1","sdt"],["Group 2","ev"],["Group 3","attr"],["Group 4","goal"]];
+
+/* round tables, four seats each */
+const TBL = [{x:225,y:245},{x:575,y:245},{x:225,y:450},{x:575,y:450}];
+const SEAT = [[0,-80],[80,0],[0,80],[-80,0]];
+function L_tables(groups, labels, keys, tbl){
+  tbl = tbl || TBL; const furn = [], pos = {};
+  groups.forEach((g,i)=>{ const t = tbl[i];
+    furn.push({type:"table", x:t.x, y:t.y, r:54, label:labels ? labels[i] : "", key:keys ? keys[i] : null});
+    g.forEach((n,si)=>pos[n] = {x:t.x+SEAT[si][0], y:t.y+SEAT[si][1]}); });
+  return {furn, pos};
+}
+/* pair desks */
+const PC = [[140,215],[307,215],[493,215],[660,215],[140,430],[307,430],[493,430],[660,430]];
+const PAIRS = [0,1,2,3,4,5,6,7].map(i=>[ALL[2*i], ALL[2*i+1]]);
+function L_pairs(){
+  const furn = [], pos = {};
+  PC.forEach(([x,y],i)=>{ furn.push({type:"desk", x:x-58, y:y-14, w:116, h:28});
+    pos[PAIRS[i][0]] = {x:x-28, y:y+36}; pos[PAIRS[i][1]] = {x:x+28, y:y+36}; });
+  return {furn, pos};
+}
+/* lecture rows, neighbours share a desk */
+const ROWY = [170,280,390,500], ROWX = [185,285,515,615];
+function L_rows(extra){
+  const furn = [], pos = {};
+  ROWY.forEach((y,r)=>{
+    furn.push({type:"desk", x:ROWX[0]-45, y:y-44, w:ROWX[1]-ROWX[0]+90, h:20});
+    furn.push({type:"desk", x:ROWX[2]-45, y:y-44, w:ROWX[3]-ROWX[2]+90, h:20});
+    TEAMS[r].forEach((n,c)=>pos[n] = {x:ROWX[c], y}); });
+  return {furn:[...(extra||[]), ...furn], pos};
+}
+/* four corners */
+const ZONES = {A:{x:16,y:96,w:240,h:190}, B:{x:544,y:96,w:240,h:190}, C:{x:16,y:374,w:240,h:190}, D:{x:544,y:374,w:240,h:190}};
+function L_corners(assign, labels){
+  const furn = Object.keys(ZONES).map(k=>({type:"zone", ...ZONES[k], letter:k, label:labels[k]})), pos = {};
+  Object.entries(assign).forEach(([k,names])=>{ const z = ZONES[k];
+    names.forEach((n,i)=>pos[n] = {x:z.x+50+(i%3)*70, y:z.y+82+Math.floor(i/3)*60}); });
+  return {furn, pos};
+}
+/* gallery posters */
+const POST = [{x:24,y:130},{x:666,y:130},{x:24,y:385},{x:666,y:385}];
+const GC = [{x:235,y:175},{x:565,y:175},{x:235,y:430},{x:565,y:430}];
+const OFF = [[-24,-24],[24,-24],[-24,24],[24,24]];
+const posters = labels => POST.map((p,i)=>({type:"poster", x:p.x, y:p.y, w:110, h:86, label:labels[i]}));
+function L_gallery(groups, labels){
+  const furn = posters(labels), pos = {};
+  groups.forEach((g,i)=>g.forEach((n,j)=>pos[n] = {x:GC[i].x+OFF[j][0], y:GC[i].y+OFF[j][1]}));
+  return {furn, pos};
+}
+/* stage at the front + tables */
+const STAGE = {x:250, y:88, w:300, h:72};
+const TBL2 = [{x:200,y:290},{x:600,y:290},{x:200,y:470},{x:600,y:470}];
+function L_stage(perf, labels, keys){
+  const L = L_tables(TEAMS.map((t,i)=>i===perf ? [] : t), labels, keys, TBL2);
+  L.furn.unshift({type:"zone", ...STAGE, letter:"", label:"Stage"});
+  TEAMS[perf].forEach((n,j)=>L.pos[n] = {x:STAGE.x+60+j*60, y:STAGE.y+44});
+  return L;
+}
+/* fishbowl */
+const CX = 400, CY = 322, RIN = 70, ROUT = 185;
+const fpt = (r,a) => ({x:CX+r*Math.cos(a*Math.PI/180), y:CY+r*Math.sin(a*Math.PI/180)});
+const FIN = [0,72,144,216,288].map(a=>fpt(RIN,a));
+const FOUT = Array.from({length:12}, (_,k)=>fpt(ROUT, 15+30*k));
+function L_fishbowl(inner, outer){
+  const furn = [{type:"ring", x:CX, y:CY, r:ROUT+30}, {type:"rug", x:CX, y:CY, r:RIN+30, label:"INNER\nCIRCLE"}];
+  [...FIN, ...FOUT].forEach(p=>furn.push({type:"chair", x:p.x, y:p.y}));
+  furn.push({type:"text", x:FIN[0].x, y:FIN[0].y, label:"empty"});
+  const pos = {}; inner.forEach((n,i)=>pos[n] = FIN[i+1]); outer.forEach((n,i)=>pos[n] = FOUT[i]);
+  return {furn, pos};
+}
+/* places the teacher can visit */
+const R = {
+  pair: i => ({x:PC[i][0], y:PC[i][1]+14, r:64}),
+  table: i => ({x:TBL[i].x, y:TBL[i].y, r:112}),
+  table2: i => ({x:TBL2[i].x, y:TBL2[i].y, r:112}),
+  row: i => { const r = Math.floor(i/2), s = i%2; return {x:s?565:235, y:ROWY[r]-12, r:64, stand:{x:s?455:345, y:ROWY[r]}}; },
+  corner: k => { const z = ZONES[k], left = k==="A"||k==="C"; return {x:z.x+z.w/2, y:z.y+z.h/2+10, r:108, stand:{x:left ? z.x+z.w+34 : z.x-34, y:z.y+z.h/2+10}}; },
+  poster: i => ({x:(POST[i].x+55+GC[i].x)/2, y:GC[i].y, r:118})
+};
+/* props */
+const env = (id, t, tbl) => ({id, kind:"env", x:(tbl||TBL)[t].x+18, y:(tbl||TBL)[t].y+12});
+const JUMBLE = [[-30,-22],[6,-30],[-14,2],[22,8],[-26,26],[12,30]];
+const strips = (ordered, done) => TBL.flatMap((t,ti)=>JUMBLE.map((o,k)=>({id:`s${ti}${k}`, kind:"strip",
+  x: ordered[ti] ? t.x : t.x+o[0], y: ordered[ti] ? t.y-28+k*11 : t.y+o[1], done:!!done})));
+const notes = counts => counts.flatMap((c,i)=>Array.from({length:c}, (_,k)=>({id:`n${i}${k}`, kind:"note",
+  x:POST[i].x+22+(k%3)*33, y:POST[i].y+42+Math.floor(k/3)*22})));
+/* ===================== The simulations ===================== */
+const SIMS = [];
+
+/* ---------- Think-Pair-Share ---------- */
+SIMS.push({
+  id:"think-pair-share", name:"Think-Pair-Share", group:"pairs",
+  blurb:"Students think and write alone, talk it through with a partner, then share with the class.",
+  format:"Individual and group", time:"16–30 min",
+  board:"A student stops turning in homework. What might explain it?",
+  layouts:{pairs:L_pairs()},
+  roles:[["Students","Think and write alone, discuss with a partner, then share."],["Teacher","Poses the question in writing, protects think time, listens in, and runs the share."]],
+  steps:[
+    {kind:"learn", chip:"Think", layout:"pairs", title:"Pose the question and give think time",
+     text:"Put the question on the board so everyone can see it the whole time. Students first think on their own and write their ideas down. Writing it down matters.",
+     tip:"Writing first means everyone has something to say when pairs start, not just the fastest thinkers.",
+     chatter:[["Aisha","(writing) Maybe they don't see the point of it…"],["Leo","(staring at the board, thinking)"]]},
+    {kind:"decide", chip:"Think", layout:"pairs", spot:"board", title:"How long should they think?",
+     setup:"You've posed the question. Students are looking at the board.", q:"What do you do next?", opts:[
+      O("Ask “Any ideas?” and call on the first hand that goes up, to keep energy high.",0,"The fastest students answer and everyone else stops thinking. The think phase is skipped entirely."),
+      O("Give one to two minutes of quiet writing time.",1,"Real think time is the heart of this technique. Don't rush it, because some students need more time to process before they talk."),
+      O("Give ten seconds to think, then say “Turn to your partner” to keep momentum.",0,"Ten seconds isn't enough to form a thought. Pairs start from scratch, and the faster partner takes over.")]},
+    {kind:"learn", chip:"Pair", layout:"pairs", title:"Partners talk it through",
+     text:"Each student turns to a partner and compares what they wrote. They look for where their ideas agree, where they differ, and which explanation seems strongest.",
+     tip:"Let students choose their partners when possible, since random pairing can be hard for some students.",
+     chatter:[["Maya","I wrote they might feel it's too hard."],["Jordan","Same, plus maybe nobody checks it."]]},
+    {kind:"round", chip:"Pair", layout:"pairs", title:"Walk around and listen",
+     text:"Visit four pairs. Listen before you say anything. Some pairs will need a nudge. Some won't.",
+     doneNote:"You've checked on every pair. Notice that one pair needed nothing from you. Listening first tells you when to step in.",
+     visits:[
+      {label:"Omar and Grace", region:R.pair(4), focus:["Omar","Grace"],
+       lines:[["Omar","I didn't write anything. I'll just go with whatever Grace says."],["Grace","Um… okay."]],
+       q:"Omar skipped the think step. What do you do?", opts:[
+        O("Let it go. Grace has a strong answer, and Omar can learn by listening.",0,"Grace does all the thinking and Omar learns nothing. The pair becomes one person talking."),
+        O("Ask Omar to jot down one idea of his own first, then compare with Grace.",1,"A short catch-up gives Omar something to bring, so the pair has two ideas to work with."),
+        O("Move Omar to a pair with more ideas, so he hears more than one view.",0,"Moving him doesn't fix the problem. He'll arrive at the new pair with nothing written, too.")]},
+      {label:"Elena and Chris", region:R.pair(6), focus:["Elena","Chris"],
+       lines:[["Chris","Did you see the game Saturday?"],["Elena","(laughs) Yeah, that last play!"]],
+       q:"They've drifted off topic. What do you do?", opts:[
+        O("Tell them to get back on task, and check back in a minute or two.",0,"They'll look busy until you walk away. A general reminder doesn't give them anything to talk about."),
+        O("Ask which of their two ideas seems more likely, and ask them why.",1,"A concrete question gives them a reason to compare notes and pulls them back without a scolding."),
+        O("Announce to the class that time is almost up, so pairs refocus.",0,"A time warning doesn't help a pair that hasn't started. It may make them give up.")]},
+      {label:"Aisha and Noah", region:R.pair(7), focus:["Aisha","Noah"],
+       lines:[["Noah","I said they think they can't do it."],["Aisha","I said it doesn't feel worth it. Maybe it's both?"]],
+       note:"This pair is comparing ideas and building a combined answer. That's exactly the goal. Let them keep going."},
+      {label:"Daniel and Priya", region:R.pair(2), focus:["Daniel","Priya"],
+       lines:[["Priya","So I have three reasons. First, the workload…"],["Daniel","(nods, his notes face down)"]],
+       q:"Priya is doing all the talking. What do you do?", opts:[
+        O("Leave them. Daniel is nodding along and seems comfortable listening.",0,"Daniel's ideas never get heard, and Priya never has to explain or defend hers."),
+        O("Ask Priya to summarize both of their ideas so the pair stays on track.",0,"That gives Priya even more airtime. Daniel stays silent."),
+        O("Ask Daniel to share one idea from his notes first, and Priya to respond.",1,"A simple turn-taking nudge makes room for Daniel and turns a monologue into a real exchange.")]}
+     ]},
+    {kind:"decide", chip:"Share", layout:"pairs", spot:"board", title:"Bring it back to the class",
+     setup:"Pairs are wrapping up. You have a few minutes.", q:"How do you run the share?", opts:[
+      O("Call on the quietest student first, so a new voice gets heard.",0,"Putting someone on the spot creates anxiety. Requiring immediate verbal sharing with the whole class shuts some students out."),
+      O("Have a few pairs share aloud, and let others add their ideas in writing.",1,"Pairs speak as a pair, which feels safer, and the written option lets everyone contribute, not just the confident speakers."),
+      O("Skip the share, since every student already talked with a partner.",0,"Ideas stay trapped in pairs, and you never learn what students are thinking.")]},
+    {kind:"summary", chip:"Recap", layout:"pairs"}
+  ],
+  recap:{steps:[["Think.","Pose a question in writing and give real, quiet time to write."],["Pair.","Partners compare and build on each other's ideas."],["Share.","Pairs share with the class, with a written option for anyone who prefers it."]],
+    jobs:["Protect the think time. Don't rush it.","Listen in on pairs and nudge with specific questions.","Make sure both partners talk.","Offer more than one way to share."]}
+});
+
+/* ---------- Pair-Square-Share ---------- */
+SIMS.push({
+  id:"pair-square-share", name:"Pair-Square-Share", group:"pairs",
+  blurb:"Partners discuss, then two pairs join into a group of four before sharing with the class.",
+  format:"Individual and group", time:"16–30 min",
+  board:"Which matters more for motivation: interest or confidence?",
+  legend:[["Square 1","sdt"],["Square 2","ev"],["Square 3","attr"],["Square 4","goal"]],
+  layouts:{pairs:L_pairs(), squares:L_tables(TEAMS, ["Square 1","Square 2","Square 3","Square 4"])},
+  roles:[["Students","Think alone, discuss in pairs, combine into squares of four, then share."],["Teacher","Times each phase, listens in, and runs the whole-class share."]],
+  steps:[
+    {kind:"learn", chip:"Pair", layout:"pairs", title:"Think, then pair",
+     text:"After a short time to think alone, students discuss the question with one partner. Pairs try to agree on an answer, or at least understand each other's reasoning.",
+     tip:"This builds on think-pair-share. The colors show which two pairs will join up in the next step.",
+     chatter:[["Marcus","Confidence. If you think you'll fail, why try?"],["Lena","But interest is what gets you started."]]},
+    {kind:"learn", chip:"Square", layout:"squares", title:"Two pairs make a square",
+     text:"After a set time, each pair joins another pair to form a group of four. Each pair explains its thinking, and the four look for a stronger, combined answer.",
+     tip:"Watch the students move. A square gives every idea a second audience before it goes to the whole class.",
+     chatter:[["Sam","Our pair said interest."],["Daniel","We said confidence. Let's compare."]]},
+    {kind:"round", chip:"Square", layout:"squares", title:"Visit all four squares",
+     text:"Walk to each square and listen. Look for squares where one pair takes over, finishes too fast, or leaves someone out.",
+     visits:[
+      {label:"Square 1", key:"sdt", region:R.table(0), focus:["Maya","Jordan","Marcus","Lena"],
+       lines:[["Maya","We already decided: interest. Done."],["Lena","But Marcus and I said confidence…"]],
+       q:"One pair is steamrolling the other. What do you do?", opts:[
+        O("Ask each pair to explain the other pair's reasoning first.",1,"Restating the other pair's view forces real listening, and often shows the answers aren't as far apart as they seemed."),
+        O("Ask them to vote, so they can settle it and keep moving.",0,"Two against two is a tie, and a vote skips the discussion that is the whole point of the square."),
+        O("Tell them which answer the research supports, so they can move on.",0,"You end the thinking. Squares exist so students work through disagreement themselves.")]},
+      {label:"Square 2", key:"ev", region:R.table(1), focus:["Daniel","Priya","Sam","Hannah"],
+       lines:[["Sam","We all agree, so we're done."],["Hannah","Can we just chill until the others finish?"]],
+       q:"This square finished fast. What do you do?", opts:[
+        O("Let them chat quietly. They've earned a break by finishing early.",0,"They lose a chance to go deeper, and the chatter can distract nearby squares."),
+        O("Have them share with the class now, to model it for the others.",0,"The other squares aren't ready, so the share loses its flow."),
+        O("Ask: “When would the other answer be true?”",1,"A stretch question uses the extra time well and adds nuance they can bring to the class share.")]},
+      {label:"Square 3", key:"attr", region:R.table(2), focus:["Omar","Grace","Leo","Fatima"],
+       lines:[["Omar","So interest gets you started and confidence keeps you going?"],["Fatima","Let's write that as our answer."]],
+       note:"This square is combining both pairs' ideas into one stronger claim. That's what the square step is for. Leave them to it."},
+      {label:"Square 4", key:"goal", region:R.table(3), focus:["Elena","Chris","Aisha","Noah"],
+       lines:[["Chris","(shrugs) I'm good with whatever."],["Aisha","Chris, what did you and Elena say?"]],
+       q:"Chris hasn't contributed. What do you do?", opts:[
+        O("Tell Chris, kindly but directly, that the square needs his ideas.",0,"Calling him out tends to make quiet students quieter."),
+        O("Have everyone write one sentence on a sticky note, then read them in turn.",1,"A quick written turn gives everyone, including Chris, a low-pressure way in. Allowing written as well as spoken sharing helps quieter students."),
+        O("Let the others carry it. Chris may contribute in the class share.",0,"Chris leaves without having thought it through, and the square loses a perspective.")]}
+     ]},
+    {kind:"decide", chip:"Share", layout:"squares", spot:"board", title:"Run the whole-class share",
+     setup:"Every square has a combined answer. You have about five minutes.", q:"How do you run the share?", opts:[
+      O("Ask every pair and square to report back, so all ideas are heard.",0,"That repeats the same ideas many times and takes far too long."),
+      O("Ask each square for its answer and one point they couldn't settle.",1,"Unresolved disagreements are often the most interesting part, and one answer per square keeps it short."),
+      O("Collect their notes and read them later to see what they discussed.",0,"Squares never hear each other's ideas, so the class doesn't build on what the groups found.")]},
+    {kind:"summary", chip:"Recap", layout:"squares"}
+  ],
+  recap:{steps:[["Think.","A short time to think alone first."],["Pair.","Discuss with one partner."],["Square.","Two pairs join, explain their thinking, and combine ideas."],["Share.","Each square reports to the class."]],
+    jobs:["Give think time before the pairs start.","Watch for one pair taking over a square.","Give fast squares a stretch question.","Keep the final share short and focused."]}
+});
+
+/* ---------- Chain Notes ---------- */
+SIMS.push({
+  id:"chain-notes", name:"Chain Notes", group:"pairs",
+  blurb:"The lecture pauses at key points so neighbors can swap notes and fill each other's gaps.",
+  format:"Group", time:"16–30 min",
+  board:"Mini-lecture: expectancy-value theory",
+  layouts:{rows:L_rows()},
+  roles:[["Students","Take notes, then trade with a neighbor to compare and fill gaps."],["Teacher","Lectures, pauses at planned points, and clears up common gaps."]],
+  steps:[
+    {kind:"learn", chip:"Lecture", layout:"rows", title:"Lecture with planned pauses",
+     text:"You give a short lecture. At a few key points, you pause so students can catch up on their notes.",
+     tip:"Plan the pauses in advance, right after the ideas students most need to get down.",
+     chatter:[["Leo","(writing fast)"],["Chris","Wait, what was the second part?"]]},
+    {kind:"decide", chip:"Lecture", layout:"rows", spot:"board", title:"Choose when to pause",
+     setup:"You're about to start the mini-lecture.", q:"When do you pause?", opts:[
+      O("Only at the end, so the lecture flows without interruption.",0,"By the end, students have forgotten what they missed, and gaps stack up."),
+      O("Every two minutes, so students get regular chances to catch up.",0,"Pauses that don't match the content break up ideas mid-thought."),
+      O("Right after each key idea.",1,"Pausing right after key ideas catches gaps while they're fresh, which is the core of the technique.")]},
+    {kind:"learn", chip:"Swap", layout:"rows", title:"Swap notes with a neighbor",
+     text:"At each pause, students trade notes with the person beside them. They compare what each wrote and talk through anything missing or different.",
+     tip:"Neighbors share a desk. Each desk is one pair.",
+     chatter:[["Sam","You got the cost part. I missed it."],["Hannah","Here, look at mine."]]},
+    {kind:"round", chip:"Swap", layout:"rows", title:"Walk the aisle",
+     text:"Visit four pairs of neighbors while they compare notes.",
+     doneNote:"You've checked every pair. The swap only works when pairs actually compare, so your job is mostly to give them something specific to look for.",
+     visits:[
+      {label:"Marcus and Lena", region:R.row(1), focus:["Marcus","Lena"],
+       lines:[["Marcus","(glances) Yours looks the same as mine."],["Lena","Cool. (looks away)"]],
+       q:"This pair swapped but isn't comparing. What do you do?", opts:[
+        O("Move on. They say their notes match, and they look confident.",0,"Notes rarely match exactly. A quick glance misses the gaps the swap is meant to catch."),
+        O("Ask them to find one thing one of them has that the other one doesn't.",1,"A concrete target makes them read closely. There's almost always a difference worth discussing."),
+        O("Collect both sets of notes to check them for gaps yourself.",0,"That turns a learning moment into an inspection.")]},
+      {label:"Sam and Hannah", region:R.row(3), focus:["Sam","Hannah"],
+       lines:[["Hannah","Value just means how interesting it is."],["Sam","I wrote interest, usefulness, and importance."]],
+       q:"They wrote different definitions. What do you do?", opts:[
+        O("Tell them Sam's version is right so they can fix the note quickly.",0,"It fixes the note, but they don't practice checking for themselves."),
+        O("Tell them both versions are fine, since both capture the main idea.",0,"Hannah's version is incomplete. A gap like this shows up later on an exam."),
+        O("Have them check both versions against the slides and flag any doubts.",1,"Checking the source teaches them how to settle differences. Their flags tell you what to clear up for everyone.")]},
+      {label:"Elena and Chris", region:R.row(6), focus:["Elena","Chris"],
+       lines:[["Chris","(quietly) I barely wrote anything."],["Elena","(shrugs)"]],
+       q:"Chris has almost no notes and seems embarrassed. What do you do?", opts:[
+        O("Quietly suggest he fill gaps from Elena's notes, or pass this round.",1,"Letting students pass if they prefer keeps the stakes low. Filling gaps from a neighbor is exactly what the technique is for."),
+        O("Remind the whole class that good notes matter, without naming him.",0,"Chris will know it's about him. Embarrassment makes him less likely to engage."),
+        O("Ask Elena to lend Chris her notes so he can copy them after class.",0,"Then Elena has nothing, and Chris doesn't process anything himself.")]},
+      {label:"Aisha and Noah", region:R.row(7), focus:["Aisha","Noah"],
+       lines:[["Aisha","You have an example I don't."],["Noah","And you have the cost part. Let's add both."]],
+       note:"They're filling each other's gaps. That's the technique working as intended."}
+     ]},
+    {kind:"decide", chip:"Continue", layout:"rows", spot:"board", title:"Before you continue",
+     setup:"The pause is ending.", q:"What do you do before you go on with the lecture?", opts:[
+      O("Continue right away. Pairs can ask their questions after class.",0,"You miss the chance to catch confusion the swap revealed."),
+      O("Ask pairs to flag what's unclear, then address the top question.",1,"Flags show you where the class is confused, so you can fix it before building on it."),
+      O("Repeat the last section, so anyone who missed it can catch up.",0,"It takes time and repeats what most students already understood.")]},
+    {kind:"summary", chip:"Recap", layout:"rows"}
+  ],
+  recap:{steps:[["Lecture.","Teach in short chunks."],["Pause.","Stop right after key ideas so students can catch up."],["Swap.","Neighbors trade notes and compare."],["Clear up.","Address the most common gaps before moving on."]],
+    jobs:["Plan pauses at the key ideas.","Give pairs something specific to look for.","Let students pass if they prefer.","Use what pairs flag to guide the rest of the lecture."]}
+});
+
+/* ---------- Peer Review ---------- */
+SIMS.push({
+  id:"peer-review", name:"Peer Review", group:"pairs",
+  blurb:"Partners trade drafts and give each other feedback using a rubric the teacher has modeled.",
+  format:"Group", time:"16–30 min",
+  board:"Draft: a one-page lesson plan that applies a motivation theory",
+  layouts:{pairs:L_pairs()},
+  roles:[["Authors","Share a draft and decide what to change."],["Reviewers","Give specific feedback tied to the rubric."],["Teacher","Models good feedback, provides the rubric, and coaches pairs."]],
+  steps:[
+    {kind:"learn", chip:"Prepare", layout:"pairs", title:"Students bring a draft",
+     text:"Each student has a draft of the same assignment. They'll swap with a partner and give feedback using a rubric.",
+     tip:"Model good feedback yourself before students try it.",
+     chatter:[["Jordan","Do I have to show mine?"],["Maya","(holding her draft) It's still rough."]]},
+    {kind:"decide", chip:"Prepare", layout:"pairs", spot:"board", title:"Prepare them to give feedback",
+     setup:"Drafts are out. Students are about to swap.", q:"What do you do first?", opts:[
+      O("Share the rubric and sample feedback in writing, and model one review aloud.",1,"Students see what good feedback sounds like and can refer to the rubric throughout. That's the core of good peer review."),
+      O("Remind them to be kind and encouraging, since drafts feel personal.",0,"Kindness matters, but “be nice” doesn't say what useful feedback looks like. Comments end up vague."),
+      O("Ask them to focus on spelling and grammar, which are easy to spot.",0,"Surface fixes are easy to spot but don't help the ideas. The rubric should guide them to bigger questions.")]},
+    {kind:"learn", chip:"Review", layout:"pairs", title:"Swap and review",
+     text:"Partners exchange drafts, read carefully, and write feedback tied to the rubric: what works, and what to change. Then they talk it through.",
+     tip:"Feedback can be written, typed, or spoken. Allowing written feedback reduces social pressure.",
+     chatter:[["Sam","Your example is really clear."],["Hannah","Can you say more about what's missing?"]]},
+    {kind:"round", chip:"Review", layout:"pairs", title:"Coach the pairs",
+     text:"Visit four pairs. Look for feedback that's vague, feedback that takes over, and students who need another way to take part.",
+     visits:[
+      {label:"Maya and Jordan", region:R.pair(0), focus:["Maya","Jordan"],
+       lines:[["Jordan","(writes) “Looks good!”"],["Maya","…That's it?"]],
+       q:"Jordan's feedback is vague. What do you do?", opts:[
+        O("Ask him to write at least three or four more sentences of feedback.",0,"More words aren't better feedback. He needs a focus, not a word count."),
+        O("Ask him for one strength and one change, tied to a rubric row.",1,"Pointing him to the rubric gives him a structure for specific, useful comments."),
+        O("Let it go. Maya can ask another classmate for more detail.",0,"Maya leaves without useful feedback, and Jordan doesn't learn how to give it.")]},
+      {label:"Daniel and Priya", region:R.pair(2), focus:["Daniel","Priya"],
+       lines:[["Priya","I rewrote your intro. It's better now."],["Daniel","(looks at his draft, crossed out)"]],
+       q:"Priya rewrote Daniel's work. What do you do?", opts:[
+        O("Thank Priya for her effort. She clearly wanted to help Daniel.",0,"It rewards taking over. Daniel loses ownership of his draft."),
+        O("Suggest Daniel keep Priya's version, since it reads more smoothly.",0,"Daniel learns nothing about revising his own work."),
+        O("Remind her that reviewers comment and suggest, and the author decides.",1,"Clear roles protect Daniel's ownership, and Priya practices giving feedback instead of doing the work.")]},
+      {label:"Omar and Grace", region:R.pair(4), focus:["Omar","Grace"],
+       lines:[["Grace","Can I write my comments instead of saying them? It makes me nervous."],["Omar","Fine by me."]],
+       q:"Grace would rather write her feedback. What do you do?", opts:[
+        O("Say yes. They can talk it through after reading the written notes.",1,"Written feedback lowers social pressure. The feedback is the point, not the format."),
+        O("Encourage her to speak, since speaking up is worth practicing.",0,"Pushing her now raises anxiety and may make her feedback less honest."),
+        O("Pair her with a partner she feels more comfortable talking with.",0,"A new partner doesn't address her concern, and it disrupts two pairs.")]},
+      {label:"Aisha and Noah", region:R.pair(7), focus:["Aisha","Noah"],
+       lines:[["Noah","Your theory section is strong. The example could connect back to it."],["Aisha","Good point. I'll fix that."]],
+       note:"Specific, rubric-based feedback, received openly. Leave them to it."}
+     ]},
+    {kind:"decide", chip:"Reflect", layout:"pairs", spot:"board", title:"Wrap up",
+     setup:"Pairs have finished their feedback.", q:"How do you close the activity?", opts:[
+      O("Collect the drafts and grade them while the feedback is fresh.",0,"Students never get to act on the feedback they just received."),
+      O("Ask a few students to read their feedback aloud to the class.",0,"Sharing feedback publicly can embarrass the authors."),
+      O("Have each student write what reviewing taught them about their draft.",1,"This reflection is a strong extension. Reviewing someone else's work is often the fastest way to see your own more clearly.")]},
+    {kind:"summary", chip:"Recap", layout:"pairs"}
+  ],
+  recap:{steps:[["Prepare.","Share the rubric and model good feedback."],["Swap.","Partners exchange drafts."],["Review.","Give specific feedback tied to the rubric."],["Reflect.","Each student notes what they'll change in their own work."]],
+    jobs:["Model feedback before students try it.","Push vague comments toward specifics.","Keep authors in charge of their own drafts.","Allow written feedback."]}
+});
+/* ---------- Case Studies ---------- */
+SIMS.push({
+  id:"case-studies", name:"Case Studies", group:"groups",
+  blurb:"Small groups analyze a realistic situation that unfolds over time and has no easy answer.",
+  format:"Group", time:"31–45 min",
+  board:"Case: In Dr. Lee's course, attendance dropped sharply after the midterm.",
+  legend:GROUP_LEGEND,
+  layouts:{tables:L_tables(TEAMS, ["Group 1","Group 2","Group 3","Group 4"])},
+  roles:[["Students","Read alone, analyze in groups from several perspectives, and propose a response."],["Teacher","Provides the case and guiding questions, adds new information, and runs the debrief."]],
+  steps:[
+    {kind:"learn", chip:"Read", layout:"tables", title:"Students read the case first",
+     text:"Each student reads the case and the guiding questions alone and notes first ideas. A case describes a realistic situation that unfolds over time, with several perspectives and no easy answer.",
+     tip:"Share case materials before class when possible, so students can start thinking early.",
+     chatter:[["Grace","(reading) So it was fine until the midterm…"],["Leo","What are we supposed to find?"]]},
+    {kind:"decide", chip:"Read", layout:"tables", spot:"board", title:"Set groups up to succeed",
+     setup:"Students have read the case. Groups are about to start.", q:"What do you tell them?", opts:[
+      O("“Your goal is to find the right answer. Be ready to defend it.”",0,"Cases don't have one right answer. Students start hunting for what you want instead of analyzing."),
+      O("“Use the guiding questions, and consider at least two perspectives.”",1,"Written questions and a push toward multiple perspectives match what cases are for: complex problems without easy solutions."),
+      O("“Talk it through as a group, and see where the discussion goes.”",0,"Too open. Groups drift without structure, and the discussion stays shallow.")]},
+    {kind:"learn", chip:"Analyze", layout:"tables", title:"Groups analyze the case",
+     text:"Groups discuss what's going on, why it might be happening, and who sees it differently: students, the instructor, the department. Then they propose a response.",
+     tip:"Roles such as reader, note-taker, skeptic, and reporter help everyone contribute.",
+     chatter:[["Hannah","What do the students think happened?"],["Priya","And what does Dr. Lee think?"]]},
+    {kind:"round", chip:"Analyze", layout:"tables", title:"Visit all four groups",
+     text:"Walk to each group. Listen for groups that jump to a fix, get stuck, or let one person do the work.",
+     visits:[
+      {label:"Group 1", key:"sdt", region:R.table(0), focus:["Marcus","Maya"],
+       lines:[["Marcus","Easy. Make attendance worth points."],["Maya","Done, right?"]],
+       q:"This group jumped straight to a fix. What do you do?", opts:[
+        O("Approve it. Attendance points are a common, reasonable fix.",0,"They skipped the analysis. A quick fix may not address why students stopped coming."),
+        O("Ask what they actually know about why students stopped coming, and why.",1,"A question sends them back to the evidence and other perspectives before they commit to a solution."),
+        O("Share the solution you had in mind, so they have a model to follow.",0,"Now they'll adopt yours. The point is for them to reason through it.")]},
+      {label:"Group 2", key:"ev", region:R.table(1), focus:["Priya","Sam"],
+       lines:[["Priya","(writing everything) …and then she said…"],["Sam","(watching, pen down)"]],
+       q:"One person is doing all the writing and thinking. What do you do?", opts:[
+        O("Let Priya continue. Her notes are thorough and will help the group.",0,"The others disengage, and the group's analysis is really one person's."),
+        O("Suggest roles for everyone: reader, note-taker, skeptic, reporter.",1,"Roles spread the work so everyone contributes and no one person carries the group."),
+        O("Quietly ask Priya to hand the pen to someone else for a while.",0,"It just moves the work to one other person. It doesn't give everyone a clear job.")]},
+      {label:"Group 3", key:"attr", region:R.table(2), focus:["Fatima","Leo"],
+       lines:[["Fatima","From the students' side, maybe the midterm felt unfair."],["Leo","Then attendance points wouldn't fix that."]],
+       note:"This group is weighing perspectives and testing ideas against each other. Leave them to it."},
+      {label:"Group 4", key:"goal", region:R.table(3), focus:["Noah","Elena"],
+       lines:[["Noah","There's no clear answer. What are we supposed to write?"],["Elena","We're kind of stuck."]],
+       q:"This group is stuck. What do you do?", opts:[
+        O("Tell them what you would conclude, so they can move forward.",0,"It gets them unstuck, but they lose the chance to work through ambiguity, which is the main skill a case builds."),
+        O("Have them join another group so they can hear more ideas.",0,"Bigger groups make it easier to hide. They'll just follow the other group's thinking."),
+        O("Ask them to list every possible cause first.",1,"A small, concrete next step gets them moving without doing the thinking for them.")]}
+     ]},
+    {kind:"learn", chip:"Unfold", layout:"tables", title:"The case unfolds",
+     board:"Update: a student survey says the midterm tested things never covered in class.",
+     text:"Share new information partway through. Groups revisit their proposals in light of the update.",
+     tip:"Cases unfold over time. New facts midway show students that good analysis changes when the facts change.",
+     chatter:[["Maya","So attendance points would've missed the real problem."],["Aisha","We need to change our answer."]]},
+    {kind:"decide", chip:"Debrief", layout:"tables", spot:"board", title:"Run the debrief",
+     setup:"Groups have revised their proposals.", q:"How do you debrief?", opts:[
+      O("Reveal the solution you'd recommend, so groups can compare.",0,"There isn't one. Revealing “the answer” teaches students that cases are guessing games."),
+      O("Have groups share proposals, evidence, and how the update changed them.",1,"Comparing reasoning across groups, and how it shifted, builds the analysis skills cases are meant to develop."),
+      O("Vote on the best proposal, so the class ends with a clear answer.",0,"A vote rewards the most popular idea, not the best-reasoned one.")]},
+    {kind:"summary", chip:"Recap", layout:"tables"}
+  ],
+  recap:{steps:[["Read alone.","Students read the case and guiding questions first."],["Analyze.","Groups look at the problem from several perspectives."],["Unfold.","New information arrives, and groups revisit their thinking."],["Debrief.","Groups compare proposals and the evidence behind them."]],
+    jobs:["Give guiding questions in writing.","Slow down groups that jump to a fix.","Use roles so everyone contributes.","Add new information to show how cases unfold."]}
+});
+
+/* ---------- Send a Problem ---------- */
+const SP_TBL = TBL;
+SIMS.push({
+  id:"send-a-problem", name:"Send a Problem", group:"groups",
+  blurb:"Groups solve a problem, pass it on, and the last group compares every solution.",
+  format:"Group", time:"45+ min",
+  board:"Each envelope holds a different student who has stopped trying. Plan how to re-engage them.",
+  legend:GROUP_LEGEND,
+  layouts:{tables:L_tables(TEAMS, ["Group 1","Group 2","Group 3","Group 4"])},
+  roles:[["Students","Solve a problem as a group, pass it on, then evaluate the solutions they receive."],["Teacher","Keeps time for each round, keeps groups from peeking, and runs the reporting."]],
+  steps:[
+    {kind:"learn", chip:"Solve", layout:"tables", title:"Each group gets a problem",
+     props:[0,1,2,3].map(i=>env("e"+i, i)),
+     text:"Each group gets an envelope with a different problem. They work out a solution, write it on a card, and put the card in the envelope.",
+     tip:"Let groups assign roles so one person doesn't speak for everyone.",
+     chatter:[["Lena","Ours is a student who says “I'm just not a math person.”"],["Hannah","Ours stopped coming after a bad grade."]]},
+    {kind:"decide", chip:"Solve", layout:"tables", spot:"board", title:"Set the timing",
+     props:[0,1,2,3].map(i=>env("e"+i, i)),
+     setup:"Groups are about to open their envelopes.", q:"How do you handle time?", opts:[
+      O("Let each group take the time it needs, so no one is rushed.",0,"Fast groups sit idle while slow groups finish, and the passing falls apart."),
+      O("Set a time for each round and give cues.",1,"Consistent time cues keep every group moving together, which the passing depends on. Just don't make rounds so short that the thinking gets rushed."),
+      O("Keep each round to one minute, so the activity moves quickly.",0,"One minute rushes the core thinking. Solutions will be thin.")]},
+    {kind:"learn", chip:"Pass", layout:"tables", title:"Pass the problem",
+     props:[0,1,2,3].map(i=>env("e"+i, (i+1)%4)),
+     text:"When time is up, each group passes its envelope to the next group. The new group solves the same problem without looking at the earlier solution.",
+     tip:"Watch the envelopes move. Each group now has a new problem.",
+     chatter:[["Grace","New one. Don't open the card."],["Noah","Fresh eyes."]]},
+    {kind:"round", chip:"Pass", layout:"tables", title:"Visit all four groups",
+     props:[0,1,2,3].map(i=>env("e"+i, (i+1)%4)),
+     text:"Walk to each group during the second round.",
+     visits:[
+      {label:"Group 1", key:"sdt", region:R.table(0), focus:["Marcus","Jordan"],
+       lines:[["Marcus","Let's just see what they wrote first."],["Jordan","(pulling out the card)"]],
+       q:"This group wants to peek at the earlier solution. What do you do?", opts:[
+        O("Let them peek. Building on earlier work can save time.",0,"They'll copy or tweak it. The value comes from independent solutions that can be compared later."),
+        O("Ask them to solve it fresh first, and explain why it matters.",1,"Independent solutions give the final group real options to compare. Explaining why helps them hold back."),
+        O("Take the envelope away until they've written their own solution.",0,"It works, but it treats them as cheaters. A quick explanation of the purpose works better.")]},
+      {label:"Group 2", key:"ev", region:R.table(1), focus:["Hannah","Daniel"],
+       lines:[["Hannah","I'll just tell you what we're writing."],["Daniel","(starts to speak, stops)"]],
+       q:"Hannah is speaking for the whole group. What do you do?", opts:[
+        O("Ask Daniel to take over the writing, so Hannah steps back.",0,"That just swaps who's in charge. Roles share the work more evenly."),
+        O("Let her lead. She's organized, and the solution will get written.",0,"It gets written, but it's Hannah's solution, not the group's."),
+        O("Ask the group to give everyone a role.",1,"Roles give everyone a part, so no single student speaks for the group.")]},
+      {label:"Group 3", key:"attr", region:R.table(2), focus:["Leo","Fatima"],
+       lines:[["Leo","What if the student picks which problem to start with?"],["Fatima","That's autonomy. Add it."]],
+       note:"This group is building on each other's ideas and tying them to course concepts. Let them work."},
+      {label:"Group 4", key:"goal", region:R.table(3), focus:["Elena","Aisha"],
+       lines:[["Elena","We're done already."],["Aisha","Should we just wait?"]],
+       q:"This group finished early. What do you do?", opts:[
+        O("Ask them to write a second, different solution to the same problem.",1,"A second approach uses the time well and gives the final group more to compare."),
+        O("Let them pass early, so the next group gets more time.",0,"The next group isn't ready, and the rounds fall out of step."),
+        O("Let them chat quietly until time is up. They've done the work.",0,"They lose time they could use to strengthen their work.")]}
+     ]},
+    {kind:"learn", chip:"Evaluate", layout:"tables", title:"The last group evaluates",
+     props:[0,1,2,3].map(i=>env("e"+i, (i+3)%4)),
+     text:"After a few passes, each envelope reaches a final group. That group opens it, reads every solution inside, compares them, and picks or combines the best one.",
+     tip:"This is where the deepest thinking happens: judging different solutions to the same problem.",
+     chatter:[["Priya","Three solutions. Which one actually fits this student?"],["Omar","The second one, plus the choice idea from the third."]]},
+    {kind:"decide", chip:"Report", layout:"tables", spot:"board", title:"Groups report",
+     props:[0,1,2,3].map(i=>env("e"+i, (i+3)%4)),
+     setup:"Each final group has chosen a solution.", q:"How do groups report?", opts:[
+      O("Read each solution aloud yourself, so every group hears all of them.",0,"Long and passive. Students hear solutions but not the reasoning that judged them."),
+      O("Each final group shares the best solution, and why it beat the rest.",1,"Explaining why one solution is best shows the evaluation skills the activity builds, and everyone hears the strongest ideas."),
+      O("Collect the envelopes and post the solutions online afterward.",0,"Few students will read them, and no one hears why one solution beat the others.")]},
+    {kind:"summary", chip:"Recap", layout:"tables", props:[0,1,2,3].map(i=>env("e"+i, (i+3)%4))}
+  ],
+  recap:{steps:[["Solve.","Each group solves its problem and seals the solution in the envelope."],["Pass.","Envelopes move on. The next group solves without peeking."],["Repeat.","Pass as many times as is useful."],["Evaluate.","The final group compares every solution and picks the best."],["Report.","Groups share the best solution and why."]],
+    jobs:["Keep consistent time for each round.","Make sure groups solve fresh before peeking.","Use roles so one student doesn't speak for the group.","Have groups explain why the best solution won."]}
+});
+
+/* ---------- Jumbled Sequence ---------- */
+SIMS.push({
+  id:"jumbled-sequence", name:"Jumbled Sequence", group:"groups",
+  blurb:"Groups put the scrambled steps of a process back in the right order.",
+  format:"Group and individual", time:"16–30 min",
+  board:"Put the steps in order: what happens after a student fails a quiz?",
+  legend:GROUP_LEGEND,
+  layouts:{tables:L_tables(TEAMS, ["Group 1","Group 2","Group 3","Group 4"])},
+  roles:[["Students","Look over the strips alone, then discuss and agree on an order as a group."],["Teacher","Prepares the strips, asks for reasons, and runs the answer check."]],
+  steps:[
+    {kind:"learn", chip:"Hand out", layout:"tables", title:"Hand out the jumbled steps",
+     props:strips([0,0,0,0]),
+     text:"Each group gets an envelope of paper strips. Each strip holds one step of a process: here, how a student's explanation for failing shapes their future effort. The strips are out of order.",
+     tip:"The six steps: fails a quiz → asks why → explains it → feels something about it → expects a result next time → decides how much effort to give.",
+     chatter:[["Jordan","Six strips. Which one goes first?"],["Omar","(spreading them out)"]]},
+    {kind:"decide", chip:"Hand out", layout:"tables", spot:"board", title:"Set the rules",
+     props:strips([0,0,0,0]),
+     setup:"Every group has its strips.", q:"What instructions do you give?", opts:[
+      O("“First group to finish wins,” to build energy and focus.",0,"A race rewards speed over reasoning. Groups lock in an order without discussing it."),
+      O("“Work from memory, with no notes,” to test what they know.",0,"That turns it into a memory test. The focus should be on understanding the order, so notes are fine."),
+      O("“Look over the strips alone first. Notes are allowed.”",1,"Individual time first means everyone forms a view, and allowing notes keeps the focus on understanding the order.")]},
+    {kind:"learn", chip:"Sequence", layout:"tables", title:"Groups build the sequence",
+     props:strips([0,1,0,0]),
+     text:"Groups discuss and move the strips until they agree on an order. The arguments about why one step comes before another are where the learning happens.",
+     tip:"Group 2 has already lined up its strips. The others are still working.",
+     chatter:[["Priya","The feeling has to come after the explanation."],["Sam","Why, though?"]]},
+    {kind:"round", chip:"Sequence", layout:"tables", title:"Visit all four groups",
+     props:strips([0,1,0,0]),
+     text:"Walk to each group. Ask for reasons, not just answers.",
+     visits:[
+      {label:"Group 1", key:"sdt", region:R.table(0), focus:["Marcus","Lena"],
+       lines:[["Marcus","(moving all the strips himself) There. Done."],["Lena","Wait, I didn't—"]],
+       q:"Marcus is sorting alone. What do you do?", opts:[
+        O("Check his order. If it's correct, let the group move on.",0,"Even if it's right, the rest of the group didn't reason through it."),
+        O("Give each person a few strips to place and explain to the group.",1,"Giving everyone strips to place and explain spreads the thinking across the group."),
+        O("Ask Marcus to walk the others through his order step by step.",0,"Better than nothing, but the others only listen. They should be doing the sequencing.")]},
+      {label:"Group 2", key:"ev", region:R.table(1), focus:["Hannah","Daniel"],
+       lines:[["Hannah","This is obviously the order. Let's glue it."],["Daniel","I'm not sure about step four…"]],
+       q:"The group is locking in fast. What do you do?", opts:[
+        O("Ask why the feeling has to come before the expectation, not after it.",1,"Asking for the reason behind one link tests their understanding and gives Daniel's doubt some room."),
+        O("Let them glue it. They seem confident, and they can check later.",0,"Confidence isn't the same as understanding, and Daniel's doubt never gets explored."),
+        O("Point out that step four looks out of place, and let them fix it.",0,"You fix the order but take away the reasoning. Let them find it.")]},
+      {label:"Group 3", key:"attr", region:R.table(2), focus:["Grace","Leo"],
+       lines:[["Grace","Effort comes before the explanation!"],["Leo","No, after!"]],
+       q:"Two students disagree loudly. What do you do?", opts:[
+        O("Tell them who's right, so the argument doesn't derail the group.",0,"It ends the argument, but they don't learn how to settle the next one."),
+        O("Ask the group to vote, so the majority decides and they move on.",0,"A vote decides by popularity, not reasoning."),
+        O("Ask each for a reason, then check the reading together.",1,"Making each side give a reason, then checking the source, turns an argument into an evidence-based discussion.")]},
+      {label:"Group 4", key:"goal", region:R.table(3), focus:["Aisha","Noah"],
+       lines:[["Aisha","First the quiz, then she asks why…"],["Noah","Then explains it. Let's check each link."]],
+       note:"This group is checking each link in the chain together. That's the thinking this activity is built for."}
+     ]},
+    {kind:"decide", chip:"Check", layout:"tables", spot:"board", title:"Check the answers",
+     props:strips([1,1,1,1]),
+     setup:"Every group has an order.", q:"How do you check?", opts:[
+      O("Show the correct order, then discuss where and why groups differed.",1,"Talking through the differences shows where understanding broke down, which is the most useful part."),
+      O("Show the correct order so groups can check their work and move on.",0,"Groups see whether they were right but don't discuss why they went wrong."),
+      O("Collect and grade the sequences to see who understood the process.",0,"Grading adds pressure and comes too late to fix misunderstandings.")]},
+    {kind:"summary", chip:"Recap", layout:"tables", props:strips([1,1,1,1])}
+  ],
+  recap:{steps:[["Hand out.","Each group gets the steps of a process on jumbled strips."],["Think alone.","Students look over the strips before discussing."],["Sequence.","Groups agree on an order and the reasons for it."],["Check.","Compare with the correct order and discuss the differences."]],
+    jobs:["Allow notes. Focus on understanding, not memory.","Ask for the reason behind each link.","Make sure everyone handles strips.","Debrief the differences, not just the answer."]}
+});
+/* ---------- Human Tableau ---------- */
+const HT_LABELS = ["Group 1 · SDT","Group 2 · Expectancy-\nvalue","Group 3 ·\nAttribution","Group 4 · Goal\norientation"];
+const HT_SHORT = ["SDT","Expectancy-\nvalue","Attribution","Goal\norientation"];
+SIMS.push({
+  id:"human-tableau", name:"Human Tableau", group:"groups",
+  blurb:"Groups build a frozen “living picture” with their bodies to show a concept.",
+  format:"Group", time:"16–30 min",
+  board:"Freeze one moment that shows your group's theory of motivation.",
+  legend:[["Group 1 · Self-determination","sdt"],["Group 2 · Expectancy-value","ev"],["Group 3 · Attribution","attr"],["Group 4 · Goal orientation","goal"]],
+  layouts:{tables:L_tables(TEAMS, HT_SHORT, KEYS), stage:L_stage(2, HT_SHORT, KEYS)},
+  roles:[["Actors","Hold the frozen scene."],["Director","Arranges the scene."],["Narrator","Gives a one-line caption."],["Teacher","Gives each concept in writing, supports planning, and runs the debrief."]],
+  steps:[
+    {kind:"learn", chip:"Assign", layout:"tables", title:"Give each group a concept",
+     text:"Each group gets one concept in writing: here, one theory of motivation. Their job is to build a frozen “living picture” with their bodies that shows the core idea.",
+     tip:"Give the concept in writing ahead of time so groups can plan.",
+     chatter:[["Omar","We have to act out attribution?"],["Grace","Frozen, though. Like statues."]]},
+    {kind:"decide", chip:"Assign", layout:"tables", spot:"board", title:"Set up the planning",
+     setup:"Each group has its concept.", q:"How do you set up the planning?", opts:[
+      O("Ask everyone to be in the scene, so no one is left out.",0,"Some students can't or don't want to perform. Offer other ways to take part, like directing or describing."),
+      O("Have groups perform right away, so scenes feel spontaneous.",0,"Unplanned public performance is stressful, and scenes end up random. Groups need time to prepare."),
+      O("Give planning time, and offer roles like director or narrator.",1,"Roles make sure everyone contributes, and non-acting roles let every student take part comfortably.")]},
+    {kind:"learn", chip:"Plan", layout:"tables", title:"Groups plan their scenes",
+     text:"Groups talk about what their concept looks like in real life, choose one moment that captures it, and rehearse the freeze.",
+     chatter:[["Maya","Autonomy: someone choosing their own project."],["Lena","Competence: someone helping them get started."]]},
+    {kind:"round", chip:"Plan", layout:"tables", title:"Visit all four groups",
+     text:"Check on each group while they plan.",
+     visits:[
+      {label:"Group 1 · SDT", key:"sdt", region:R.table(0), focus:["Maya","Lena"],
+       lines:[["Maya","Jordan, you're the teacher. Marcus, you're choosing a project."],["Lena","And I'm the friend cheering him on. That's relatedness."]],
+       note:"They've mapped each part of the theory to a person in the scene. Strong planning. Let them rehearse."},
+      {label:"Group 2 · Expectancy-value", key:"ev", region:R.table(1), focus:["Priya","Hannah"],
+       lines:[["Priya","Can we just do a skit and talk it through?"],["Hannah","That's easier."]],
+       q:"This group wants to act it out with dialogue. What do you do?", opts:[
+        O("Say yes. A short skit with dialogue still shows the concept.",0,"A skit is a different activity. The challenge of a tableau is showing the idea without words."),
+        O("Remind them it's a frozen scene. A narrator can add a caption.",1,"The freeze forces them to find the single moment that shows the concept. The caption gives them a voice without turning it into a skit."),
+        O("Suggest a scene for them, so they can spend the time rehearsing.",0,"You take away the most important thinking: deciding which moment best shows the idea.")]},
+      {label:"Group 3 · Attribution", key:"attr", region:R.table(2), focus:["Fatima","Omar"],
+       lines:[["Fatima","I really don't want to be in it."],["Omar","Everyone has to."]],
+       q:"Fatima doesn't want to perform. What do you do?", opts:[
+        O("Offer her the director or narrator role.",1,"Directing or narrating is real participation. These roles are good ways to take part when acting isn't comfortable."),
+        O("Encourage her to try. Most students enjoy it once they start.",0,"Pressure to perform can feel humiliating and doesn't help her learn more."),
+        O("Let her sit this one out and watch the other groups instead.",0,"She skips the thinking, not just the acting. A different role keeps her involved.")]},
+      {label:"Group 4 · Goal orientation", key:"goal", region:R.table(3), focus:["Noah","Aisha"],
+       lines:[["Noah","Mastery could be studying… or practicing… or…"],["Aisha","We have like five ideas."]],
+       q:"This group can't settle on a scene. What do you do?", opts:[
+        O("Pick the strongest of their ideas, so they can start rehearsing.",0,"You save time but skip the decision that shows their understanding."),
+        O("Ask which single moment best shows the mastery–performance contrast.",1,"Narrowing to one moment helps them choose, and it tests whether they understand the core contrast."),
+        O("Suggest combining their ideas into one larger, richer scene.",0,"A scene with five ideas shows none of them clearly.")]}
+     ]},
+    {kind:"learn", chip:"Present", layout:"stage", title:"Groups present",
+     text:"One group at a time freezes its scene at the front. The audience studies it before the group explains.",
+     tip:"Here, Group 3 shows attribution: one student slumps over a failed test while another points to a study plan.",
+     chatter:[["Fatima","(narrating) “It wasn't luck. It was the plan.”"],["Aisha","Oh, effort is something you control!"]]},
+    {kind:"decide", chip:"Debrief", layout:"stage", spot:{x:400, y:124, r:90, stand:{x:400, y:196}}, spotName:"stage", title:"Debrief each scene",
+     setup:"Group 3 is holding its freeze.", q:"How do you debrief each scene?", opts:[
+      O("Explain each scene yourself, so the key points are clear.",0,"The audience stops thinking and waits for you."),
+      O("Have the class score each scene, to keep the audience engaged.",0,"Scoring makes it about acting, not the concept."),
+      O("Have the audience interpret first, then let the group explain.",1,"Interpreting the scene makes the audience think too, and the group's explanation shows what they understood.")]},
+    {kind:"summary", chip:"Recap", layout:"stage"}
+  ],
+  recap:{steps:[["Assign.","Give each group a concept in writing."],["Plan.","Groups choose one moment that shows the idea, with roles."],["Present.","Each group freezes its scene for the class."],["Debrief.","The audience interprets, then the group explains."]],
+    jobs:["Allow real planning time.","Offer non-acting roles like director and narrator.","Push groups toward one clear moment.","Let the audience do the interpreting."]}
+});
+
+/* ---------- Gallery Tour ---------- */
+const GT_LABELS = ["Poster 1","Poster 2","Poster 3","Poster 4"];
+SIMS.push({
+  id:"gallery-tour", name:"Gallery Tour", group:"moving",
+  blurb:"Students walk between posters around the room, respond on sticky notes, and build on each other's ideas.",
+  format:"Individual", time:"Under 15 min",
+  board:"On each poster: which motivation idea is at work here, and why?",
+  legend:GROUP_LEGEND,
+  layouts:{
+    seated:L_rows(posters(GT_LABELS)),
+    tour:L_gallery(TEAMS, GT_LABELS)
+  },
+  roles:[["Students","Visit each poster, add a response, and build on others' notes."],["Teacher","Sets up the gallery, keeps students moving and responding, and runs the debrief."]],
+  steps:[
+    {kind:"learn", chip:"Set up", layout:"seated", title:"Hang the gallery",
+     text:"Post four short classroom scenarios around the room, each on its own poster with room for sticky notes. Students will walk the gallery and respond on each one.",
+     tip:"Calling it a tour rather than a walk is more inclusive. Offer a digital version for anyone who can't move around the room easily.",
+     chatter:[["Sam","Are we walking around?"],["Maya","Sticky notes, nice."]]},
+    {kind:"decide", chip:"Set up", layout:"seated", spot:"board", title:"Decide how students move",
+     setup:"Students are about to get up.", q:"How do students move through the gallery?", opts:[
+      O("Everyone starts at Poster 1 and moves through the posters together.",0,"Sixteen people at one poster means most can't see or write, and the rest stand around."),
+      O("Groups start at different posters and move at their own pace.",1,"Different starting points avoid crowding, and self-paced movement lets students spend time where they need it, which works better than a fixed timer."),
+      O("Groups rotate on a strict ninety-second timer, so it stays on pace.",0,"A short fixed timer cuts off thinking just as it starts. Self-paced movement works better.")]},
+    {kind:"learn", chip:"Tour", layout:"tour", title:"Students tour and respond",
+     props:notes([3,2,3,0]),
+     text:"Students read each poster, add a sticky note with their response, and read and build on what others wrote.",
+     tip:"Notes pile up on the posters as the tour goes on.",
+     chatter:[["Aisha","This one's attribution. She blames herself for not being smart."],["Chris","(adds a note) Agree!"]]},
+    {kind:"round", chip:"Tour", layout:"tour", title:"Walk the gallery",
+     props:notes([3,2,3,0]),
+     text:"Check on every poster.",
+     doneNote:"You've checked every poster. Your main job during a gallery tour is keeping the responses thoughtful and the posters reachable for everyone.",
+     visits:[
+      {label:"Poster 1", region:R.poster(0), focus:["Maya","Jordan"],
+       lines:[["Jordan","(sticks a note) Agree!"],["Maya","(sticks a note) Same!"]],
+       q:"Students are just adding “agree” notes. What do you do?", opts:[
+        O("Remove the “agree” notes, so only useful responses remain.",0,"That discourages them without showing what a good response looks like."),
+        O("Ask them to build on an existing note by adding a reason or a question.",1,"Building on others' notes turns the poster into a written conversation instead of a list of votes."),
+        O("Let it go. Any note shows they're engaging with the poster.",0,"The poster fills up, but with nothing new. The debrief will have little to work with.")]},
+      {label:"Poster 2", region:R.poster(1), focus:["Sam","Hannah"],
+       lines:[["Sam","(at the back) I can't really read it from here."],["Hannah","It's crowded."]],
+       q:"Sam can't see the poster. What do you do?", opts:[
+        O("Ask him to wait until the crowd thins out, then move closer.",0,"He may never get a good view, and he loses time at every poster."),
+        O("Read the poster aloud to the room, so everyone can hear it.",0,"It interrupts every other group to help one student."),
+        O("Point him to the copy on the course page or a handout.",1,"A readable copy lets everyone take part. Posted material should be accessible and available digitally.")]},
+      {label:"Poster 3", region:R.poster(2), focus:["Grace","Fatima"],
+       lines:[["Grace","Someone wrote “expectancy.” I'd add that value matters too."],["Fatima","Write that under theirs."]],
+       note:"Students are reading earlier notes and adding to them. The poster has become a conversation. No need to step in."},
+      {label:"Poster 4", region:R.poster(3), focus:["Noah","Elena"],
+       lines:[["Noah","Nobody's written anything here yet."],["Elena","Where do we even start?"]],
+       q:"Poster 4 has no notes yet. What do you do?", opts:[
+        O("Write a first answer yourself, to show what a note looks like.",0,"Students will just agree with you. The poster should hold their thinking."),
+        O("Suggest they start with a question about the scenario.",1,"A question is an easy first note to write, and it gives the next group something to respond to."),
+        O("Take Poster 4 down. If it's hard to start, it may be unclear.",0,"That scenario may be the one students most need to think about.")]}
+     ]},
+    {kind:"decide", chip:"Debrief", layout:"tour", spot:"board", title:"Run the debrief",
+     props:notes([6,6,6,5]),
+     setup:"Time's up. Every poster is covered in notes.", q:"How do you debrief?", opts:[
+      O("Assign each group one poster to summarize for the whole class.",1,"Groups do the synthesis, and the class hears a summary of every poster in a few minutes."),
+      O("Read every sticky note aloud, so all responses get recognized.",0,"Slow and passive. Students hear notes but never look for patterns."),
+      O("Take the posters down, and post photos of the notes online.",0,"The notes never get discussed, so students don't learn from each other's responses.")]},
+    {kind:"summary", chip:"Recap", layout:"tour", props:notes([6,6,6,5])}
+  ],
+  recap:{steps:[["Set up.","Post prompts, cases, or work samples around the room."],["Tour.","Students move at their own pace and respond on each poster."],["Build.","Students read and add to each other's notes."],["Debrief.","Groups summarize each poster's notes for the class."]],
+    jobs:["Spread starting points to avoid crowding.","Prefer self-paced movement over a strict timer.","Offer a readable or digital copy of every poster.","Push responses beyond “agree.”"]}
+});
+
+/* ---------- Four Corners ---------- */
+const FC_LABELS = {A:"Praise effort", B:"Offer a choice", C:"Show why it matters", D:"Set a learning goal"};
+const FC1 = {A:["Hannah","Marcus","Sam","Chris","Elena"], B:["Maya","Jordan","Lena","Omar"], C:["Priya","Grace","Leo","Fatima"], D:["Daniel","Aisha","Noah"]};
+const FC2 = {A:["Hannah","Marcus","Sam","Elena"], B:["Maya","Jordan","Lena","Omar","Leo"], C:["Priya","Grace","Fatima"], D:["Daniel","Aisha","Noah","Chris"]};
+const fcColor = Object.fromEntries(Object.entries(FC1).flatMap(([k,ns])=>ns.map(n=>[n, {A:"sdt",B:"ev",C:"attr",D:"goal"}[k]])));
+SIMS.push({
+  id:"four-corners", name:"Four Corners", group:"moving",
+  blurb:"Students move to the corner that matches their answer, build a case with others there, and try to persuade the room.",
+  format:"Group", time:"Under 15 min",
+  board:"A student has given up. Best first move? A Praise effort · B Offer a choice · C Show why it matters · D Set a learning goal",
+  legend:[["First chose A","sdt"],["First chose B","ev"],["First chose C","attr"],["First chose D","goal"]],
+  colorOf:n=>fcColor[n],
+  layouts:{rows:L_rows(), c1:L_corners(FC1, FC_LABELS), c2:L_corners(FC2, FC_LABELS)},
+  roles:[["Students","Choose an answer, move to that corner, build a case with others there, and stay open to switching."],["Teacher","Poses the question, gives think time, pushes for reasons, and connects answers to course ideas."]],
+  steps:[
+    {kind:"learn", chip:"Pose", layout:"rows", title:"Pose a question with four answers",
+     text:"Label the corners of the room A, B, C, and D. Put a multiple-choice question on the board. Each corner stands for one answer.",
+     tip:"Questions with more than one defensible answer work best. They give every corner something to argue.",
+     chatter:[["Daniel","Hmm, I'm torn between B and D."],["Hannah","A, obviously."]]},
+    {kind:"decide", chip:"Pose", layout:"rows", spot:"board", title:"Before anyone moves",
+     setup:"The question is on the board.", q:"What do you do before students move?", opts:[
+      O("Say “Go!” so students move right away and keep up the energy.",0,"Students follow friends or the crowd instead of their own reasoning."),
+      O("Give a minute for everyone to choose and write down one reason first.",1,"Writing a reason first means students commit to their own thinking. Give think time before moving, since some students need longer to decide."),
+      O("Ask for a show of hands first, to see where people are leaning.",0,"A public vote shows where the crowd is going, and students may switch to follow it.")]},
+    {kind:"learn", chip:"Move", layout:"c1", title:"Students move to their corners",
+     text:"Students walk to the corner that matches their answer. In each corner, they share their reasons and build their best case.",
+     tip:"Corners won't be even. That's fine, and it often makes the discussion more interesting.",
+     chatter:[["Sam","Praise effort. Easy."],["Noah","Only three of us in D."]]},
+    {kind:"round", chip:"Move", layout:"c1", title:"Visit all four corners",
+     text:"Walk to each corner while they build their case.",
+     visits:[
+      {label:"Corner A", key:"sdt", region:R.corner("A"), focus:["Hannah","Sam"],
+       lines:[["Hannah","A is right because… it just is!"],["Sam","Yeah!"]],
+       q:"Corner A is loud but has no reasons. What do you do?", opts:[
+        O("Ask them to lower their voices so other corners can think.",0,"You lower the volume, not the quality. They still have no reasons."),
+        O("Ask them to agree on their two strongest reasons.",1,"Asking for reasons turns enthusiasm into an argument they can defend."),
+        O("Tell them A is the weakest answer, to push them to rethink.",0,"Now they'll just move. They should change their minds through argument, not your verdict.")]},
+      {label:"Corner B", key:"ev", region:R.corner("B"), focus:["Maya","Lena"],
+       lines:[["Maya","Choice builds autonomy. That's self-determination theory."],["Lena","And it's something you could do tomorrow."]],
+       note:"Corner B is grounding its answer in theory and in practical reasons. Let them prepare."},
+      {label:"Corner C", key:"attr", region:R.corner("C"), focus:["Leo","Priya"],
+       lines:[["Leo","Honestly, I just came here because Grace did."],["Priya","Same, kind of."]],
+       q:"Some students followed friends. What do you do?", opts:[
+        O("Ask them to move to whichever corner they'd choose on their own.",0,"Asking them to move singles them out and doesn't teach them to reason. They may just follow someone else."),
+        O("Ignore it. Friends often think alike, so their choice may be sound.",0,"They'll repeat others' reasons without thinking, and the activity loses its point for them."),
+        O("Ask each for one reason of their own for C.",1,"Every student should own a reason. Inviting them to move keeps it honest without singling anyone out.")]},
+      {label:"Corner D", key:"goal", region:R.corner("D"), focus:["Daniel","Noah"],
+       lines:[["Noah","There are only three of us."],["Daniel","(quietly) I have a reason, but…"]],
+       q:"Corner D is small, and Daniel is hesitant. What do you do?", opts:[
+        O("Have them write their reasons on a card that anyone can read out.",1,"Writing first lowers the pressure, and a card lets the group share Daniel's reason even if he'd rather not speak."),
+        O("Ask Daniel to speak for the corner, to build his confidence.",0,"Putting a hesitant student on the spot often backfires. Requiring immediate verbal justification shuts some students out."),
+        O("Suggest they join another corner, so the groups are more even.",0,"Small corners often have the most interesting arguments. Merging them loses a perspective.")]}
+     ]},
+    {kind:"learn", chip:"Persuade", layout:"c2", title:"Corners share and persuade",
+     text:"Each corner shares its best reasons. Students can try to persuade others, and anyone who's convinced can switch corners.",
+     tip:"Watch Chris and Leo move. Switching is a good outcome: it means someone weighed the arguments.",
+     chatter:[["Chris","(walking to D) Okay, the learning goal argument got me."],["Leo","(moving to B) Choice makes more sense to me now."]]},
+    {kind:"decide", chip:"Debrief", layout:"c2", spot:"board", title:"Run the debrief",
+     setup:"Two students have switched corners.", q:"How do you debrief?", opts:[
+      O("Reveal the answer you'd choose, and explain your reasoning.",0,"With several defensible answers, naming “the right one” shuts down the reasoning students just did."),
+      O("Count who's in each corner to see which answer won the room.",0,"A headcount shows popularity, not understanding."),
+      O("Ask switchers what changed their minds, then link to theory.",1,"Switchers make the reasoning visible, and linking each corner to a theory ties the debate back to course content.")]},
+    {kind:"summary", chip:"Recap", layout:"c2"}
+  ],
+  recap:{steps:[["Pose.","Label the corners and post a question with four answers."],["Think.","Students choose and write a reason before moving."],["Move.","Students go to their corner and build their case."],["Persuade.","Corners share, and students may switch."],["Debrief.","Connect the arguments to course ideas."]],
+    jobs:["Give think time before anyone moves.","Push every corner for reasons.","Offer written ways to contribute.","Celebrate switching as good reasoning."]}
+});
+
+/* ---------- Jigsaw ---------- */
+const THEORY = {sdt:"Self-determination", ev:"Expectancy-value", attr:"Attribution", goal:"Goal orientation"};
+const JG_EXPERT = KEYS.map((k,i)=>TEAMS.map(t=>t[i]));
+SIMS.push({
+  id:"jigsaw", name:"Jigsaw", group:"groups",
+  blurb:"Each student learns one piece in an expert group, then teaches it to their home team.",
+  format:"Group", time:"",
+  board:"Four theories of motivation",
+  legend:KEYS.map(k=>[THEORY[k], k]),
+  colorOf:n=>KEYS[TEAMS[TEAM_OF[n]].indexOf(n)],
+  layouts:{home:L_tables(TEAMS, ["Team 1","Team 2","Team 3","Team 4"]), expert:L_tables(JG_EXPERT, ["SDT","Expectancy-\nvalue","Attribution","Goal\norientation"], KEYS)},
+  roles:[["Home team","Four students, one per theory. They teach each other."],["Expert group","Students with the same theory learn it together."],["Teacher","Checks every expert group for accuracy and every home team for real teaching."]],
+  steps:[
+    {kind:"learn", chip:"Home teams", layout:"home", title:"Start in home teams",
+     text:"Students sit in teams of four. This is their home team. Each person in the team gets a different piece of the topic: here, one of four theories of motivation.",
+     tip:"The colors show which theory each student has. Every team has one of each color.",
+     chatter:[["Maya","I got self-determination theory."],["Jordan","Mine is expectancy-value."]]},
+    {kind:"learn", chip:"Expert groups", layout:"expert", title:"Move to expert groups",
+     text:"Students leave their home team and sit with classmates who have the same theory. Together they read, talk it through, and make sure they can teach it.",
+     tip:"Watch the students move. Each table now works on one theory.",
+     chatter:[["Aisha","So effort and strategy are things we can change."],["Priya","Expectancy is “Can I do this?”"]]},
+    {kind:"round", chip:"Expert groups", layout:"expert", title:"Visit all four expert groups",
+     text:"Catch misunderstandings before they spread to every home team, and make sure everyone is taking part.",
+     visits:[
+      {label:"SDT group", key:"sdt", region:R.table(0), focus:["Omar","Elena"],
+       lines:[["Omar","SDT just means give students choices, right?"],["Elena","Yep. Choice. Done."]],
+       q:"They've missed part of the theory. What do you do?", opts:[
+        O("Let it go. Their home teams can catch the mistake later.",0,"Nobody in a home team has read about SDT except the SDT expert. If the expert group gets it wrong, every team learns it wrong."),
+        O("Ask what else, besides choice, a student needs to feel motivated.",1,"A short question helps them find the missing parts (feeling capable and feeling connected) on their own."),
+        O("Explain SDT to the group yourself, so the content is accurate.",0,"The facts get fixed, but students stop owning the content. In a jigsaw, students are the teachers.")]},
+      {label:"Expectancy-value group", key:"ev", region:R.table(1), focus:["Priya","Jordan"],
+       lines:[["Priya","I'll explain it and you all copy this down."],["Jordan","(copying her notes word for word)"]],
+       q:"Priya is doing all the explaining. What do you do?", opts:[
+        O("Let Priya lead, since what she's explaining is accurate.",0,"The others will each have to teach this using notes they don't understand. A jigsaw needs four prepared experts."),
+        O("Give each person one part to explain to the others, then quiz each other.",1,"Everyone has to understand at least one part well enough to explain it, which is exactly what they'll do back home."),
+        O("Remind the whole class that everyone should be participating.",0,"General reminders rarely change one group. Priya will likely think you mean someone else.")]},
+      {label:"Attribution group", key:"attr", region:R.table(2), focus:["Aisha","Sam"],
+       lines:[["Aisha","So “I'm just bad at math” is a cause they can't control."],["Sam","Right, and “I didn't study” is something they can change."]],
+       note:"This group is on track: own examples, checking each other. A quick “Nice work” is enough."},
+      {label:"Goal orientation group", key:"goal", region:R.table(3), focus:["Noah","Fatima"],
+       lines:[["Noah","Performance goals are bad, mastery goals are good. Simple."],["Fatima","So that's what we'll tell our teams."]],
+       q:"Their summary is too simple. What do you do?", opts:[
+        O("Let it go. A simple version is easier for their teams to remember.",0,"Easy to remember, but only half right. Every home team would learn that all performance goals are bad, which the reading doesn't say."),
+        O("Ask what two kinds of performance goals their reading describes.",1,"This sends them back to the reading to find the distinction themselves: trying to do better than others is different from trying not to look worse than others. The second kind is the one most tied to poor outcomes."),
+        O("Tell them “the research is mixed” so they add a caveat.",0,"That may be true, but it leaves them nothing clear to teach their home teams.")]}
+     ]},
+    {kind:"learn", chip:"Teach back", layout:"home", title:"Go home and teach",
+     text:"Each student returns to their home team and teaches their theory. Now every team has one expert per theory, and everyone needs each other to learn the whole topic.",
+     tip:"This is why it's called a jigsaw: each person holds one piece of the puzzle.",
+     chatter:[["Sam","Okay, attribution is about how you explain a result."],["Noah","Mastery goals are about getting better."]]},
+    {kind:"round", chip:"Teach back", layout:"home", title:"Visit all four home teams",
+     text:"Listen for experts who aren't being heard and for teaching that's just reading notes aloud.",
+     visits:[
+      {label:"Team 1", region:R.table(0), focus:["Maya","Lena"],
+       lines:[["Maya","Think of a class where you chose your own project. That's autonomy."],["Lena","But what if I chose something too hard?"]],
+       note:"The expert explains with an example, and a teammate pushes back with a question. Let them keep going."},
+      {label:"Team 2", region:R.table(1), focus:["Daniel","Hannah"],
+       lines:[["Hannah","I'll explain SDT for Daniel. It's about rewards, right?"],["Daniel","(looks down)"]],
+       q:"Hannah is speaking for Daniel, and she's wrong. What do you do?", opts:[
+        O("Correct Hannah and explain SDT to the team yourself.",0,"Daniel is pushed aside twice. The team learns that you, not Daniel, are the expert."),
+        O("Ask Daniel, by name, what his expert group said.",1,"A specific invitation gives a quiet student a way in, and the correction comes from the expert."),
+        O("Let Hannah continue, since at least someone is talking.",0,"Team 2 learns the wrong idea, and Daniel learns his part doesn't matter.")]},
+      {label:"Team 3", region:R.table(2), focus:["Grace","Omar"],
+       lines:[["Grace","“Expectancy refers to an individual's belief about…”"],["Omar","Can you just send us your notes?"]],
+       q:"Grace is reading her notes word for word. What do you do?", opts:[
+        O("Let her continue. Her notes are accurate and complete.",0,"Correct words aren't the same as understanding. Her teammates leave with notes, not ideas."),
+        O("Tell Omar you'll post everyone's notes online after class.",0,"If notes come anyway, students stop listening to each other."),
+        O("Ask Grace to explain with an example, then take questions.",1,"An example shows real understanding, and the questions pull everyone back in.")]},
+      {label:"Team 4", region:R.table(3), focus:["Aisha","Chris"],
+       lines:[["Aisha","Quick question first: why do you think you did well on your last exam?"],["Chris","(puts his phone away) Honestly? Luck."]],
+       note:"Aisha ties the theory to her teammates' own experience, and even Chris tunes in. A nod and move on."}
+     ]},
+    {kind:"decide", chip:"Check learning", layout:"home", spot:"board", title:"Check what everyone learned",
+     setup:"Every team has heard all four theories. Five minutes left.", q:"How do you end the lesson?", opts:[
+      O("Ask each team to share the most important thing they learned.",0,"Usually the most confident person speaks, and you can't tell what each student understood."),
+      O("Give a short quiz, one question per theory, answered alone.",1,"Each student is responsible for all four theories. A short solo check makes that real."),
+      O("Thank everyone and let them leave a few minutes early.",0,"You won't know whether the jigsaw worked.")]},
+    {kind:"summary", chip:"Recap", layout:"home"}
+  ],
+  recap:{steps:[["Home teams.","Each person gets a different piece of the topic."],["Expert groups.","Students with the same piece learn it together."],["Teach back.","Experts return home and teach their piece."],["Check learning.","Each student shows what they learned across all pieces."]],
+    jobs:["Visit every expert group and catch mistakes early.","Make sure every expert gets heard.","Guide with questions instead of taking over.","Check every individual at the end."]}
+});
+
+/* ---------- Fishbowl ---------- */
+const FB_GROUP = {Hannah:"sdt",Daniel:"sdt",Priya:"sdt",Sam:"sdt",Maya:"ev",Omar:"ev",Grace:"ev",Noah:"ev"};
+const FB_R1 = L_fishbowl(["Hannah","Daniel","Priya","Sam"], ["Noah","Marcus","Aisha","Elena","Lena","Chris","Leo","Jordan","Fatima","Maya","Grace","Omar"]);
+const FB_R2 = L_fishbowl(["Maya","Omar","Grace","Noah"], ["Hannah","Marcus","Aisha","Elena","Lena","Chris","Leo","Jordan","Fatima","Daniel","Priya","Sam"]);
+SIMS.push({
+  id:"fishbowl", name:"Fishbowl", group:"moving",
+  blurb:"A small inner circle discusses while the outer circle observes with a job, then they swap.",
+  format:"Small group with observers", time:"",
+  board:"Should grades be used to motivate students?",
+  legend:[["First inner group","sdt"],["Second inner group","ev"],["Observers","attr"]],
+  colorOf:n=>FB_GROUP[n] || "attr",
+  block:{x:CX, y:CY, r:212},
+  layouts:{r1:FB_R1, r2:FB_R2},
+  roles:[["Inner circle","Discusses the question with each other, not with the teacher."],["Outer circle","Each observer watches one speaker and notes specific moves."],["Empty chair","Any observer can sit in briefly to add one point, then return."],["Teacher","Sets roles, stays out of the discussion, keeps observers working, and runs the debrief."]],
+  steps:[
+    {kind:"learn", chip:"Set up", layout:"r1", title:"Set up two circles",
+     text:"Arrange a small inner circle and a larger outer circle. Four students in the inner circle discuss a question. Everyone else observes. One inner chair stays empty.",
+     tip:"The empty chair lets an observer step in briefly. You'll see how later.",
+     chatter:[["Hannah","Wait, we're talking first?"],["Aisha","So we just watch?"]]},
+    {kind:"decide", chip:"Observer jobs", layout:"r1", spot:"board", title:"Give the outer circle a job",
+     setup:"Before the discussion starts, the observers need to know what to do.", q:"What do you ask the outer circle to do?", opts:[
+      O("Listen quietly and respectfully, so the inner circle can focus.",0,"Quiet listening without a focus usually drifts into tuning out."),
+      O("Take notes on everything that's said, to use in the debrief.",0,"Too much to track. A narrow focus produces better notes and a better debrief."),
+      O("Each watches one speaker and notes specific moves.",1,"A clear, narrow job keeps observers busy and gives them concrete things to share in the debrief.")]},
+    {kind:"learn", chip:"Discussion", layout:"r1", title:"The inner circle discusses",
+     text:"The inner circle talks with each other, not with you. Observers take notes on their speaker. An observer who wants to add something can sit in the empty chair, make the point, and go back.",
+     tip:"Your job now is to keep both circles working while staying out of the discussion.",
+     chatter:[["Priya","Grades push people to work harder."],["Sam","But do they help people learn, or just perform?"]]},
+    {kind:"round", chip:"Discussion", layout:"r1", title:"Walk around while they talk",
+     text:"Check four spots: the inner circle, the empty chair, and two parts of the outer circle.",
+     doneNote:"Notice how little you said to the inner circle. In a fishbowl, most of your work is keeping observers engaged and the empty chair open.",
+     visits:[
+      {label:"Inner circle", region:{x:CX, y:CY, r:100, stand:{x:400, y:108}}, focus:["Hannah","Daniel"],
+       lines:[["Hannah","Grades obviously motivate people. And another thing…"],["Daniel","(starts to speak, gets cut off)"]],
+       q:"Hannah keeps talking, and Daniel can't get in. What do you do?", opts:[
+        O("Step in and call on each person in turn, to even things out.",0,"It evens things out, but now the discussion runs through you."),
+        O("Quietly hand Hannah a card asking her to invite someone else in first.",1,"A light nudge opens space for Daniel without taking over, and models a move observers can name later."),
+        O("Let it play out. The observers will notice and discuss it later.",0,"Daniel loses his chance to contribute.")]},
+      {label:"Empty chair", region:{x:FIN[0].x, y:FIN[0].y, r:30, stand:{x:626, y:CY}}, focus:["Omar"],
+       lines:[["Omar","(standing up) Can I jump in? I want to add something about grades and stress."]],
+       q:"Omar wants to use the empty chair. What do you do?", opts:[
+        O("Ask him to save the point for the swap, when he'll be inside.",0,"The empty chair exists for exactly this."),
+        O("Let him join the inner circle for the rest of this round.",0,"Then the chair isn't open for anyone else."),
+        O("Wave him in for one point, then he returns to his own seat.",1,"Short visits let observers contribute without taking over the inner circle.")]},
+      {label:"Outer circle, left", region:{x:236, y:300, r:88, stand:{x:172, y:CY}}, focus:["Chris","Leo"],
+       lines:[["Chris","(scrolling on his phone)"],["Leo","This is kind of boring, just watching."]],
+       q:"Two observers have checked out. What do you do?", opts:[
+        O("Ask what they've noticed about their speaker so far.",1,"A specific question pulls them back to their task and shows their notes will matter."),
+        O("Remind them to put phones away and pay attention.",0,"A general reminder gives them nothing to do."),
+        O("Let them be. Observing matters less than discussing.",0,"Observing is the outer circle's work. Without it, the debrief will be thin.")]},
+      {label:"Outer circle, back", region:{x:400, y:494, r:82, stand:{x:400, y:552}}, focus:["Aisha","Elena"],
+       lines:[["Aisha","(writing) Priya gave an example from her own class. That's evidence."],["Elena","Sam built on Daniel's point. Noting that."]],
+       note:"These observers are doing exactly what you asked. Their notes will power the debrief."}
+     ]},
+    {kind:"learn", chip:"Swap", layout:"r2", title:"Swap the circles",
+     text:"After about 8 to 10 minutes, a new group moves into the inner circle and picks up the discussion. The first group moves out and becomes observers.",
+     tip:"Watch the students change places. Swapping means everyone both discusses and observes.",
+     chatter:[["Maya","Picking up where they left off: what if grades were only feedback?"],["Hannah","Now I'm watching Maya. Got it."]]},
+    {kind:"decide", chip:"Debrief", layout:"r2", spot:"board", title:"Run the debrief",
+     setup:"Both rounds are done. You have ten minutes.", q:"How do you debrief?", opts:[
+      O("Summarize the main arguments yourself, to give clear closure.",0,"Students hear your version, and the observers' notes go unused."),
+      O("Ask observers what they saw, then ask the inner circle how it felt.",1,"Observers' notes become the content of the debrief. This is where most of the learning in a fishbowl happens."),
+      O("Collect the observation notes and give feedback next class.",0,"The observing never pays off for students.")]},
+    {kind:"summary", chip:"Recap", layout:"r2"}
+  ],
+  recap:{steps:[["Set up.","A small inner circle with one empty chair, and an outer circle of observers."],["Give jobs.","Each observer watches one speaker."],["Discuss.","The inner circle talks. Observers may use the empty chair briefly."],["Swap.","A new group moves in."],["Debrief.","Observers share what they saw, and inner circles reflect."]],
+    jobs:["Stay out of the inner circle's discussion.","Use light nudges instead of taking over.","Keep observers working and the empty chair open.","Build the debrief from observers' notes."]}
+});
+/* ===================== Engine ===================== */
+const BY_ID = Object.fromEntries(SIMS.map(s=>[s.id, s]));
+let sim = null, S = null; const SAVED = {};
+const students = ALL.map(n=>({name:n, x:400, y:320, tx:400, ty:320, say:"", until:0}));
+let layoutName = null, propPos = {};
+const teacher = {x:TOP.x, y:TOP.y, tx:null, ty:null, walk:0, onArrive:null};
+const cv = $("room"), ctx = cv.getContext("2d");
+let scale = 1, C = {};
+function readColors(){
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  C = {floor:g("--floor"), surface:g("--surface"), line:g("--line"), ink:g("--ink"), muted:g("--muted"), accent:g("--accent"),
+    accentInk:g("--accent-ink"), dotInk:g("--dot-ink"), good:g("--good"), stu:g("--stu"), note:g("--note"),
+    sdt:g("--sdt"), ev:g("--ev"), attr:g("--attr"), goal:g("--goal")};
+}
+function resize(){ const r = cv.getBoundingClientRect(); if(!r.width) return; const dpr = window.devicePixelRatio||1; cv.width = Math.round(r.width*dpr); cv.height = Math.round(r.width*H/W*dpr); scale = cv.width/W; }
+new ResizeObserver(resize).observe(cv); readColors(); setInterval(readColors, 700);
+
+const step = () => sim.steps[S.idx];
+const solved = (opts, tr) => (tr||[]).some(j=>opts[j].ok);
+const triedAt = () => (S.tried[S.idx] ||= []);
+const round = (i=S.idx) => (S.rounds[i] ||= {cur:null, tried:{}, seen:{}});
+function visitDone(i, t){ const r = round(i), v = sim.steps[i].visits[t]; return v.opts ? solved(v.opts, r.tried[t]) : !!r.seen[t]; }
+const roundDone = (i=S.idx) => sim.steps[i].visits.every((_,t)=>visitDone(i,t));
+function canAdvance(){
+  const st = step();
+  if(st.kind==="decide") return solved(st.opts, S.tried[S.idx]);
+  if(st.kind==="round") return roundDone();
+  return S.idx < sim.steps.length-1;
+}
+const standOf = g => g.stand || (g.y-g.r-10 >= 100 ? {x:g.x, y:g.y-g.r-10} : {x:g.x, y:Math.min(H-30, g.y+g.r+10)});
+const spotOf = st => (!st.spot || st.spot==="board") ? null : st.spot;
+const colorKey = n => !sim.legend ? "stu" : (sim.colorOf ? sim.colorOf(n) : KEYS[TEAM_OF[n]]);
+
+function applyLayout(name, instant){
+  const L = sim.layouts[name]; layoutName = name;
+  students.forEach(s=>{ const p = L.pos[s.name]; if(p){ s.tx = p.x; s.ty = p.y; if(instant){ s.x = p.x; s.y = p.y; } } });
+}
+function applyProps(list, instant){
+  const next = {};
+  (list||[]).forEach(p=>{ const cur = propPos[p.id]; next[p.id] = {...p, cx:(cur && !instant) ? cur.cx : p.x, cy:(cur && !instant) ? cur.cy : p.y}; });
+  propPos = next;
+}
+function sayAs(name, text, ms){ const s = students.find(x=>x.name===name); if(s){ s.say = text; s.until = performance.now()+(ms||4200); } }
+function clearSpeech(){ students.forEach(s=>s.until = 0); }
+function walkTo(p, cb){
+  teacher.tx = p.x; teacher.ty = p.y;
+  const at = S.idx, who = sim;
+  teacher.onArrive = cb ? ()=>{ if(sim===who && S.idx===at) cb(); } : null;
+}
+function targets(){
+  const st = step();
+  if(st.kind==="decide") return S.arrived[S.idx] ? [] : [spotOf(st) || "board"];
+  if(st.kind==="round"){ const r = round(); return st.visits.map((_,t)=>t).filter(t=>!visitDone(S.idx,t) && r.cur!==t).map(t=>st.visits[t].region); }
+  return [];
+}
+function goToDecide(){
+  const st = step(), sp = spotOf(st);
+  walkTo(sp ? standOf(sp) : TOP, ()=>{ S.arrived[S.idx] = true; (st.lines||[]).forEach(([n,l],i)=>setTimeout(()=>sayAs(n,l,5000), i*1500)); render(); });
+}
+function visit(t){
+  const st = step(), r = round();
+  clearSpeech(); r.cur = null; render();
+  walkTo(standOf(st.visits[t].region), ()=>{
+    r.cur = t; const v = st.visits[t];
+    if(!v.opts) r.seen[t] = true;
+    v.lines.forEach(([n,l],i)=>setTimeout(()=>sayAs(n,l,5200), 200+i*1500));
+    render();
+    if(window.innerWidth < 820) $("stage").scrollIntoView({behavior:"smooth", block:"start"});
+  });
+}
+cv.addEventListener("pointerdown", e=>{
+  if(!sim) return;
+  const st = step(), b = cv.getBoundingClientRect(), x = (e.clientX-b.left)/b.width*W, y = (e.clientY-b.top)/b.height*H;
+  if(st.kind==="decide" && !S.arrived[S.idx]){
+    const sp = spotOf(st);
+    const hit = sp ? Math.hypot(x-sp.x, y-sp.y) < sp.r : (y < 120 && Math.abs(x-400) < 250);
+    if(hit) goToDecide();
+  } else if(st.kind==="round"){
+    const hits = st.visits.map((v,t)=>[t, Math.hypot(x-v.region.x, y-v.region.y), v.region.r]).filter(h=>h[1]<h[2]).sort((a,b)=>a[2]-b[2]);
+    if(hits.length && round().cur!==hits[0][0]) visit(hits[0][0]);
+  }
+});
+cv.addEventListener("keydown", e=>{
+  if(!sim || (e.key!==" " && e.key!=="Enter")) return;
+  const st = step();
+  if(st.kind==="decide" && !S.arrived[S.idx]){ e.preventDefault(); goToDecide(); }
+  else if(st.kind==="round"){ const t = st.visits.findIndex((_,i)=>!visitDone(S.idx,i)); if(t>=0){ e.preventDefault(); visit(t); } }
+});
+
+function update(dt){
+  if(teacher.tx!==null){
+    const dx = teacher.tx-teacher.x, dy = teacher.ty-teacher.y, d = Math.hypot(dx,dy);
+    if(d < 5){ teacher.tx = null; const f = teacher.onArrive; teacher.onArrive = null; if(f) f(); }
+    else {
+      let vx = dx/d, vy = dy/d;
+      const B = sim.block;
+      if(B){ const ox = teacher.x-B.x, oy = teacher.y-B.y, od = Math.hypot(ox,oy)||1;
+        if(od < B.r+24 && -(vx*ox+vy*oy)/od > 0){ const tx = -oy/od, ty = ox/od, side = (tx*dx+ty*dy) >= 0 ? 1 : -1;
+          vx = vx*.3+tx*side*.9; vy = vy*.3+ty*side*.9; const m = Math.hypot(vx,vy); vx /= m; vy /= m; } }
+      const stp = Math.min(d, SPEED*dt); teacher.x += vx*stp; teacher.y += vy*stp; teacher.walk += dt*11;
+    }
+  }
+  if(sim.block){ const B = sim.block, ox = teacher.x-B.x, oy = teacher.y-B.y, od = Math.hypot(ox,oy)||1; if(od < B.r){ teacher.x = B.x+ox/od*B.r; teacher.y = B.y+oy/od*B.r; } }
+  teacher.x = Math.max(24, Math.min(W-24, teacher.x)); teacher.y = Math.max(92, Math.min(H-24, teacher.y));
+  const k = Math.min(1, dt*2.2);
+  students.forEach(s=>{ s.x += (s.tx-s.x)*k; s.y += (s.ty-s.y)*k; });
+  Object.values(propPos).forEach(p=>{ p.cx += (p.x-p.cx)*Math.min(1, dt*2.6); p.cy += (p.y-p.cy)*Math.min(1, dt*2.6); });
+}
+
+function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function wrap(text, maxW, maxLines){
+  const words = String(text).split(/\s+/), lines = []; let line = "";
+  for(const w of words){ const t = line ? line+" "+w : w; if(ctx.measureText(t).width > maxW && line){ lines.push(line); line = w; } else line = t; }
+  if(line) lines.push(line);
+  if(lines.length > maxLines){ lines.length = maxLines; lines[maxLines-1] += "…"; }
+  return lines;
+}
+const FONT = (w,s,disp) => `${w} ${s}px ${disp ? '"Lexend"' : '"Atkinson Hyperlegible"'}, system-ui, sans-serif`;
+function bubble(x, y, text, strong){
+  ctx.font = FONT(strong?700:400, 12.5);
+  const lines = wrap(text, 180, 3), w = Math.max(...lines.map(l=>ctx.measureText(l).width))+18, h = lines.length*16+12;
+  const bx = Math.max(6, Math.min(W-w-6, x-w/2)), by = Math.max(6, y-h-10);
+  ctx.fillStyle = strong ? C.accent : C.surface; ctx.strokeStyle = strong ? C.accent : C.line; ctx.lineWidth = 1.5;
+  rr(bx,by,w,h,8); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x-6,by+h-1); ctx.lineTo(x+6,by+h-1); ctx.lineTo(x,by+h+7); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = strong ? C.accentInk : C.ink; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  lines.forEach((l,i)=>ctx.fillText(l, bx+9, by+7+i*16));
+}
+function badge(x, y, done, pulse){
+  x = Math.max(16, Math.min(W-16, x)); y = Math.max(16, Math.min(H-16, y));
+  ctx.fillStyle = done ? C.good : C.accent;
+  ctx.beginPath(); ctx.arc(x, y, done ? 12 : 13+pulse*1.5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = done ? C.surface : C.accentInk; ctx.font = FONT(700,14,1); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(done ? "✓" : "!", x, y+1);
+}
+function centerText(lines, x, y, lh){ const n = lines.length; lines.forEach((l,i)=>ctx.fillText(l, x, y+(i-(n-1)/2)*lh)); }
+function drawFurn(f){
+  ctx.lineWidth = 2; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  if(f.type==="table"){
+    ctx.fillStyle = C.surface; ctx.strokeStyle = f.key ? C[f.key] : C.line; ctx.lineWidth = f.key ? 4 : 2; ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = C.ink; ctx.font = FONT(600,12.5,1); centerText(String(f.label).split("\n"), f.x, f.y, 15);
+  } else if(f.type==="desk"){
+    ctx.fillStyle = C.surface; ctx.strokeStyle = C.line; rr(f.x,f.y,f.w,f.h,4); ctx.fill(); ctx.stroke();
+  } else if(f.type==="zone"){
+    ctx.strokeStyle = C.line; ctx.setLineDash([6,6]); rr(f.x,f.y,f.w,f.h,12); ctx.stroke(); ctx.setLineDash([]);
+    ctx.textAlign = "left"; ctx.textBaseline = "top";
+    if(f.letter){ ctx.fillStyle = C.ink; ctx.font = FONT(700,26,1); ctx.fillText(f.letter, f.x+14, f.y+10); ctx.fillStyle = C.muted; ctx.font = FONT(700,12); ctx.fillText(f.label, f.x+14, f.y+44); }
+    else { ctx.fillStyle = C.muted; ctx.font = FONT(700,11); ctx.fillText(String(f.label).toUpperCase(), f.x+10, f.y+8); }
+  } else if(f.type==="poster"){
+    ctx.fillStyle = C.surface; ctx.strokeStyle = C.ink; rr(f.x,f.y,f.w,f.h,4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = C.ink; ctx.font = FONT(700,12,1); ctx.fillText(f.label, f.x+f.w/2, f.y+14);
+    ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; [26,32].forEach(dy=>{ ctx.beginPath(); ctx.moveTo(f.x+14,f.y+dy); ctx.lineTo(f.x+f.w-14,f.y+dy); ctx.stroke(); });
+  } else if(f.type==="ring"){
+    ctx.strokeStyle = C.line; ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2); ctx.stroke();
+  } else if(f.type==="rug"){
+    ctx.fillStyle = C.surface; ctx.strokeStyle = C.line; ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.font = FONT(700,11); centerText(f.label.split("\n"), f.x, f.y, 14);
+  } else if(f.type==="chair"){
+    ctx.fillStyle = C.surface; ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; rr(f.x-17,f.y-17,34,34,7); ctx.fill(); ctx.stroke();
+  } else if(f.type==="text"){
+    ctx.fillStyle = C.muted; ctx.font = FONT(400,9.5); ctx.fillText(f.label, f.x, f.y);
+  }
+}
+function drawProp(p){
+  const x = p.cx, y = p.cy;
+  if(p.kind==="env"){
+    ctx.fillStyle = C.surface; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; rr(x-15,y-10,30,20,2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x-15,y-10); ctx.lineTo(x,y+1); ctx.lineTo(x+15,y-10); ctx.stroke();
+  } else if(p.kind==="note"){
+    ctx.fillStyle = C.note; rr(x-12,y-9,24,18,2); ctx.fill();
+    ctx.strokeStyle = C.ink; ctx.globalAlpha = .35; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x-7,y-2); ctx.lineTo(x+7,y-2); ctx.moveTo(x-7,y+3); ctx.lineTo(x+4,y+3); ctx.stroke(); ctx.globalAlpha = 1;
+  } else if(p.kind==="strip"){
+    ctx.fillStyle = C.surface; ctx.strokeStyle = p.done ? C.good : C.muted; ctx.lineWidth = 1.5; rr(x-18,y-4.5,36,9,2); ctx.fill(); ctx.stroke();
+  }
+}
+function draw(now){
+  ctx.setTransform(scale,0,0,scale,0,0);
+  ctx.fillStyle = C.floor; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle = C.line; ctx.globalAlpha = .45; ctx.lineWidth = 1;
+  for(let x=40;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for(let y=40;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  ctx.globalAlpha = 1;
+  const st = step(), tg = targets(), pulse = (Math.sin(now/280)+1)/2;
+  // board
+  ctx.fillStyle = C.surface; ctx.strokeStyle = C.ink; ctx.lineWidth = 2; rr(BOARD.x,BOARD.y,BOARD.w,BOARD.h,6); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = C.ink; ctx.font = FONT(700,13.5,1); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  centerText(wrap(st.board || sim.board, BOARD.w-28, 2), 400, BOARD.y+BOARD.h/2, 18);
+  ctx.textAlign = "center";
+  sim.layouts[layoutName].furn.forEach(drawFurn);
+  Object.values(propPos).forEach(drawProp);
+  tg.forEach(t=>{
+    ctx.strokeStyle = C.accent; ctx.lineWidth = 3; ctx.setLineDash([7,6]);
+    if(t==="board"){ rr(BOARD.x-8-pulse*4, BOARD.y-6-pulse*3, BOARD.w+16+pulse*8, BOARD.h+12+pulse*6, 10); ctx.stroke(); }
+    else { ctx.beginPath(); ctx.arc(t.x, t.y, t.r+pulse*4, 0, Math.PI*2); ctx.stroke(); }
+    ctx.setLineDash([]);
+  });
+  let focus = [];
+  if(st.kind==="decide" && S.arrived[S.idx]) focus = st.focus || [];
+  if(st.kind==="round" && round().cur!==null) focus = st.visits[round().cur].focus || [];
+  students.forEach(s=>{
+    if(focus.includes(s.name)){ ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(s.x,s.y,21,0,Math.PI*2); ctx.stroke(); }
+    ctx.fillStyle = C[colorKey(s.name)]; ctx.beginPath(); ctx.arc(s.x,s.y,15,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = C.dotInk; ctx.font = FONT(700,11); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(s.name.slice(0,2), s.x, s.y+.5);
+  });
+  if(tg.includes("board")) badge(BOARD.x+BOARD.w+4, BOARD.y+4, false, pulse);
+  else if(st.kind==="decide" && tg.length){ const t = tg[0]; badge(t.x+t.r*.7, t.y-t.r*.7, false, pulse); }
+  if(st.kind==="round") st.visits.forEach((v,t)=>{ const done = visitDone(S.idx,t); if(done || tg.includes(v.region)) badge(v.region.x+v.region.r*.7, v.region.y-v.region.r*.7, done, pulse); });
+  // teacher
+  const bob = teacher.tx!==null ? Math.sin(teacher.walk)*2 : 0;
+  ctx.fillStyle = C.ink; ctx.globalAlpha = .15; ctx.beginPath(); ctx.ellipse(teacher.x, teacher.y+18, 16, 5, 0, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1;
+  ctx.fillStyle = C.accent; ctx.beginPath(); ctx.ellipse(teacher.x, teacher.y+4+bob*.3, 17, 12, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(teacher.x, teacher.y-8+bob, 10, 0, Math.PI*2); ctx.fill();
+  ctx.font = FONT(700,11); ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillText("You", teacher.x, teacher.y+18);
+  const idle = teacher.tx===null && (st.kind==="decide" ? !S.arrived[S.idx] : st.kind==="round" && round().cur===null);
+  if(tg.length && idle) bubble(teacher.x, teacher.y-22, st.kind==="round" ? "Click a glowing spot to visit" : `Click the glowing ${st.spotName || (spotOf(st) ? "spot" : "board")}`, true);
+  students.forEach(s=>{ if(s.until > now) bubble(s.x, s.y-19, s.say, false); });
+}
+let last = performance.now();
+function loop(now){ const dt = Math.min(.05, (now-last)/1000); last = now; if(sim && !$("simview").hidden){ update(dt); draw(now); } requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+/* ---------- panel ---------- */
+function chips(){ return [...new Set(sim.steps.map(s=>s.chip))]; }
+function renderStepper(){
+  const list = chips(), cur = step().chip;
+  $("stepper").innerHTML = list.map((p,k)=>`<li class="${p===cur?'now':''}"><button data-c="${esc(p)}" ${p===cur?'aria-current="step"':''}>${p==="Recap"?"":(k+1)+". "}${esc(p)}</button></li>`).join("");
+  $("stepper").querySelectorAll("button").forEach(b=>b.onclick=()=>go(sim.steps.findIndex(x=>x.chip===b.dataset.c)));
+}
+function avatar(n){ return `<div class="av" style="background:var(--${colorKey(n)});color:var(--dot-ink)" aria-hidden="true">${esc(n.slice(0,2))}</div>`; }
+const dialogue = lines => (lines && lines.length) ? `<div class="dialogue">${lines.map(([n,l])=>`<div class="line">${avatar(n)}<div class="bubble"><b>${esc(n)}</b>${esc(l)}</div></div>`).join("")}</div>` : "";
+function question(q, opts, tr){
+  const done = solved(opts, tr);
+  let h = `<h3>${esc(q)}</h3><div class="options">${opts.map((o,j)=>{ const was = tr.includes(j); return `<button class="opt ${was?(o.ok?'right':'wrong'):''}" data-j="${j}" ${done||was?'disabled':''}><span class="k">${"ABC"[j]}</span><span>${esc(o.t)}</span></button>`; }).join("")}</div>`;
+  if(tr.length){ const o = opts[tr[tr.length-1]]; h += `<div class="fb ${o.ok?'strong':'weak'}"><div><span class="pill ${o.ok?'strong':'weak'}">${o.ok?'Good choice':'Not quite'}</span></div><p>${esc(o.f)}</p>${o.ok?"":`<p class="hint">Try another answer.</p>`}</div>`; }
+  if(done) h += `<button class="ex" id="redo" style="justify-self:start">Clear my answer and try again</button>`;
+  return h;
+}
+function nav(){
+  return `<div class="row navrow">${S.idx>0?`<button class="btn ghost" id="back">← Back</button>`:""}${S.idx<sim.steps.length-1 && canAdvance()?`<button class="btn" id="next">Next →</button>`:""}<span class="hint" style="align-self:center">Card ${S.idx+1} of ${sim.steps.length}</span></div>`;
+}
+function render(){
+  const st = step();
+  renderStepper();
+  if(st.layout !== layoutName) applyLayout(st.layout);
+  applyProps(st.props);
+  const learns = sim.steps.filter(x=>x.kind==="learn");
+  let html = "";
+  if(st.kind==="learn"){
+    const n = learns.indexOf(st)+1;
+    html = `<div class="eyebrow">Step ${n} of ${learns.length} · ${esc(st.chip)}</div>
+      <div class="row" style="align-items:center;gap:14px"><span class="stepnum">${n}</span><h2>${esc(st.title)}</h2></div>
+      <p>${esc(st.text)}</p>${st.tip?`<p class="tip">${esc(st.tip)}</p>`:""}${nav()}`;
+  } else if(st.kind==="round"){
+    const r = round(), total = st.visits.length, count = st.visits.filter((_,t)=>visitDone(S.idx,t)).length;
+    if(r.cur===null){
+      html = `<div class="eyebrow">Your turn · ${esc(st.chip)}</div><h2>${esc(st.title)}</h2><p>${esc(st.text)}</p>
+        <p class="tip">Click a glowing spot in the room, or use the buttons below. Visit them in any order.</p>
+        <div class="checklist"><div class="ck-head"><b>${count} of ${total} visited</b><div class="bar"><i style="width:${count/total*100}%"></i></div></div>
+        ${st.visits.map((v,t)=>{ const done = visitDone(S.idx,t), started = !done && (r.tried[t]||[]).length;
+          return `<div class="ck"><span class="ck-name">${v.key?`<i style="background:var(--${v.key})"></i>`:""}${esc(v.label)}</span>
+            <span class="pill ${done?'strong':started?'weak':'mixed'}">${done?'✓ Done':started?'Try again':'Not visited'}</span>
+            <button class="ex" data-v="${t}">${done?'Revisit':'Go'}</button></div>`; }).join("")}</div>
+        ${roundDone()?`<div class="notice">${esc(st.doneNote || "You've checked on every group. Notice that not every group needed you. Part of monitoring is knowing when to leave a group alone.")}</div>`:""}
+        ${nav()}`;
+    } else {
+      const t = r.cur, v = st.visits[t], tr = (r.tried[t] ||= []);
+      const nx = st.visits.map((_,i)=>i).find(i=>i!==t && !visitDone(S.idx,i));
+      html = `<div class="eyebrow">Visiting · ${count} of ${total} done</div><h2>${esc(v.label)}</h2>${dialogue(v.lines)}
+        ${v.opts ? question(v.q, v.opts, tr) : `<div class="fb strong"><div><span class="pill strong">On track</span></div><p>${esc(v.note)}</p></div>`}
+        <div class="row">${visitDone(S.idx,t) && nx!==undefined?`<button class="btn" id="nextspot">Go to ${esc(st.visits[nx].label)}</button>`:""}
+        <button class="btn ghost" id="list">See all</button></div>${nav()}`;
+    }
+  } else if(st.kind==="decide"){
+    const where = st.spotName || (spotOf(st) ? "spot" : "board");
+    if(!S.arrived[S.idx]){
+      html = `<div class="eyebrow">Your turn · ${esc(st.chip)}</div><h2>${esc(st.title)}</h2><p>${esc(st.setup)}</p>
+        <p class="tip">Click the glowing ${where} to walk over.</p>
+        <div class="row"><button class="btn" id="walk">Walk there</button></div>${nav()}`;
+    } else {
+      html = `<div class="eyebrow">Your turn · ${esc(st.chip)}</div><h2>${esc(st.title)}</h2><p>${esc(st.setup)}</p>${dialogue(st.lines)}${question(st.q, st.opts, triedAt())}${nav()}`;
+    }
+  } else {
+    const items = [];
+    sim.steps.forEach((s,i)=>{
+      if(s.kind==="decide") items.push([s.opts, S.tried[i]]);
+      if(s.kind==="round") s.visits.forEach((v,t)=>{ if(v.opts) items.push([v.opts, (S.rounds[i]?.tried||{})[t]]); });
+    });
+    const answered = items.filter(([,tr])=>tr && tr.length), first = answered.filter(([o,tr])=>o[tr[0]].ok).length;
+    html = `<div class="eyebrow">All done</div><h2>That's ${esc(sim.name)}</h2>
+      ${answered.length===items.length ? `<p>You chose the strongest move on the first try in ${first} of ${items.length} decisions.</p>` : `<p>You've answered ${answered.length} of ${items.length} decisions. Use the steps at the top to go back to any of them.</p>`}
+      <div><h3>The steps</h3><ol class="steps-list" style="margin-top:8px">${sim.recap.steps.map(([b,t])=>`<li><b>${esc(b)}</b> ${esc(t)}</li>`).join("")}</ol></div>
+      <div><h3>Your job as the teacher</h3><ul class="list" style="margin-top:8px">${sim.recap.jobs.map(j=>`<li>${esc(j)}</li>`).join("")}</ul></div>
+      <div class="row navrow"><button class="btn ghost" id="back">← Back</button><button class="btn ghost" id="again">Start over</button><a class="btn" href="#">Try another technique</a></div>`;
+  }
+  const stage = $("stage"); stage.innerHTML = html;
+
+  if(st.kind==="learn"){ const who = sim, at = S.idx; (st.chatter||[]).forEach(([n,l],i)=>setTimeout(()=>{ if(sim===who && S.idx===at) sayAs(n,l,3800); }, 900+i*1400)); }
+  if((st.kind==="learn" || st.kind==="summary") && teacher.tx===null && Math.hypot(teacher.x-TOP.x, teacher.y-TOP.y) > 10) walkTo(TOP);
+  stage.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+    const j = +b.dataset.j;
+    if(st.kind==="round"){ const r = round(); (r.tried[r.cur] ||= []).push(j); } else triedAt().push(j);
+    render();
+  });
+  stage.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>visit(+b.dataset.v));
+  if($("redo")) $("redo").onclick = ()=>{ if(st.kind==="round"){ const r = round(); r.tried[r.cur] = []; } else S.tried[S.idx] = []; render(); };
+  if($("nextspot")){ const r = round(); const nx = st.visits.map((_,i)=>i).find(i=>i!==r.cur && !visitDone(S.idx,i)); $("nextspot").onclick = ()=>visit(nx); }
+  if($("list")) $("list").onclick = ()=>{ round().cur = null; clearSpeech(); render(); };
+  if($("next")) $("next").onclick = ()=>go(S.idx+1);
+  if($("back")) $("back").onclick = ()=>go(S.idx-1);
+  if($("walk")) $("walk").onclick = goToDecide;
+  if($("again")) $("again").onclick = ()=>{ S.tried = {}; S.arrived = {}; S.rounds = {}; S.idx = -1; go(0); };
+}
+function go(i){
+  if(i<0 || i>=sim.steps.length || i===S.idx) return;
+  S.idx = i; teacher.onArrive = null; teacher.tx = null; clearSpeech();
+  if(step().kind==="round") round().cur = null;
+  render();
+  if(window.innerWidth < 820) $("stage").scrollIntoView({behavior:"smooth", block:"start"});
+}
+document.addEventListener("keydown", e=>{
+  if(!sim || $("simview").hidden) return;
+  const a = document.activeElement;
+  if(a && /^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)) return;
+  if(e.key==="ArrowRight" && canAdvance()){ e.preventDefault(); go(S.idx+1); }
+  else if(e.key==="ArrowLeft"){ e.preventDefault(); go(S.idx-1); }
+});
+
+/* ---------- home + routing ---------- */
+const GROUPS = [["pairs","Pairs and fours","Students work with a partner, sometimes joining a second pair."],["groups","Small groups","Groups of four work together on a shared task."],["moving","Moving around the room","Students change places to respond, debate, or observe."]];
+function renderHome(){
+  $("home").innerHTML = GROUPS.map(([g,title,sub])=>`<section class="hgroup"><div><h2>${title}</h2><p class="sub">${sub}</p></div>
+    <div class="cards">${SIMS.filter(s=>s.group===g).map(s=>`<a class="card" href="#${s.id}">
+      <span class="card-name">${esc(s.name)}</span><span class="card-blurb">${esc(s.blurb)}</span>
+      <span class="card-meta">${esc(s.format)}${s.time?` · ${esc(s.time)}`:""}</span><span class="card-go">Start →</span></a>`).join("")}</div></section>`).join("");
+}
+function showHome(){
+  sim = null; $("simview").hidden = true; $("home").hidden = false; $("homeBtn").hidden = true; $("stepper").hidden = true;
+  $("eyebrow").textContent = "Beginner walkthroughs · Collaborative active learning";
+  $("h1").textContent = "Active Learning Sims";
+  $("sub").textContent = "Walk a virtual classroom of 16 students and practice facilitating twelve collaborative active learning techniques. Each sim teaches the steps, sends you to visit groups, and asks you to make a few teaching decisions.";
+  window.scrollTo(0,0);
+}
+function openSim(id){
+  sim = BY_ID[id];
+  S = SAVED[id] ||= {idx:0, tried:{}, arrived:{}, rounds:{}};
+  $("home").hidden = true; $("simview").hidden = false; $("homeBtn").hidden = false; $("stepper").hidden = false;
+  $("eyebrow").textContent = `Beginner walkthrough · ${sim.format}`;
+  $("h1").textContent = sim.name;
+  $("sub").textContent = sim.blurb + " Move back and forth with the buttons, the steps below, or your ← → keys.";
+  $("legend").innerHTML = (sim.legend||[]).map(([l,k])=>`<span><i style="background:var(--${k})"></i>${esc(l)}</span>`).join("");
+  $("legend").hidden = !sim.legend;
+  $("about").innerHTML = `<h3>About ${esc(sim.name)}</h3>
+    <dl class="facts"><dt>Format</dt><dd>${esc(sim.format)}</dd>${sim.time?`<dt>Time to run</dt><dd>${esc(sim.time)} minimum</dd>`:""}</dl>
+    ${sim.roles.map(([t,d])=>`<details><summary>${esc(t)}</summary><p>${esc(d)}</p></details>`).join("")}`;
+  applyLayout(step().layout, true); applyProps(step().props, true);
+  if(step().kind==="round") round().cur = null;
+  teacher.x = TOP.x; teacher.y = TOP.y; teacher.tx = null; teacher.onArrive = null; clearSpeech();
+  resize(); render(); window.scrollTo(0,0);
+}
+function route(){ const id = decodeURIComponent(location.hash.slice(1)); if(BY_ID[id]) openSim(id); else showHome(); }
+$("homeBtn").onclick = ()=>{ location.hash = ""; };
+window.addEventListener("hashchange", route);
+renderHome(); route();
+</script>
+</body>
+</html>
