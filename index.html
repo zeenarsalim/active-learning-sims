@@ -443,7 +443,7 @@ SIMS.push({
      chatter:[["Sam","You got the cost part. I missed it."],["Hannah","Here, look at mine."]]},
     {kind:"round", chip:"Swap", layout:"rows", title:"Walk the aisle",
      text:"Visit four pairs of neighbors while they compare notes.",
-     doneNote:"You've checked every pair. The swap only works when pairs actually compare, so your job is mostly to give them something specific to look for.",
+     doneNote:"You've checked every pair. The swap only works when pairs actually compare, so your task is mostly to give them something specific to look for.",
      visits:[
       {label:"Marcus and Lena", region:R.row(1), focus:["Marcus","Lena"],
        lines:[["Marcus","(glances) Yours looks the same as mine."],["Lena","Cool. (looks away)"]],
@@ -1033,14 +1033,14 @@ SIMS.push({
      text:"Arrange a small inner circle and a larger outer circle. Four students in the inner circle discuss a question. Everyone else observes. One inner chair stays empty.",
      tip:"The empty chair lets an observer step in briefly. You'll see how later.",
      chatter:[["Hannah","Wait, we're talking first?"],["Aisha","So we just watch?"]]},
-    {kind:"decide", chip:"Observer jobs", layout:"r1", spot:"board", title:"Give the outer circle a job",
+    {kind:"decide", chip:"Observer Task", layout:"r1", spot:"board", title:"Give the outer circle a task",
      setup:"Before the discussion starts, the observers need to know what to do.", q:"What do you ask the outer circle to do?", opts:[
       O("Listen quietly and respectfully, so the inner circle can focus.",0,"Quiet listening without a focus usually drifts into tuning out."),
       O("Take notes on everything that's said, to use in the debrief.",0,"Too much to track. A narrow focus produces better notes and a better debrief."),
-      O("Each watches one speaker and notes specific moves.",1,"A clear, narrow job keeps observers busy and gives them concrete things to share in the debrief.")]},
+      O("Each watches one speaker and notes specific moves.",1,"A clear, narrow task keeps observers busy and gives them concrete things to share in the debrief.")]},
     {kind:"learn", chip:"Discussion", layout:"r1", title:"The inner circle discusses",
      text:"The inner circle talks with each other, not with you. Observers take notes on their speaker. An observer who wants to add something can sit in the empty chair, make the point, and go back.",
-     tip:"Your job now is to keep both circles working while staying out of the discussion.",
+     tip:"Your task now is to keep both circles working while staying out of the discussion.",
      chatter:[["Priya","Grades push people to work harder."],["Sam","But do they help people learn, or just perform?"]]},
     {kind:"round", chip:"Discussion", layout:"r1", title:"Walk around while they talk",
      text:"Check four spots: the inner circle, the empty chair, and two parts of the outer circle.",
@@ -1079,8 +1079,8 @@ SIMS.push({
       O("Collect the observation notes and give feedback next class.",0,"The observing never pays off for students.")]},
     {kind:"summary", chip:"Recap", layout:"r2"}
   ],
-  recap:{steps:[["Set up.","A small inner circle with one empty chair, and an outer circle of observers."],["Give jobs.","Each observer watches one speaker."],["Discuss.","The inner circle talks. Observers may use the empty chair briefly."],["Swap.","A new group moves in."],["Debrief.","Observers share what they saw, and inner circles reflect."]],
-    jobs:["Stay out of the inner circle's discussion.","Use light nudges instead of taking over.","Keep observers working and the empty chair open.","Build the debrief from observers' notes."]}
+  recap:{steps:[["Set up.","A small inner circle with one empty chair, and an outer circle of observers."],["Give tasks.","Each observer watches one speaker."],["Discuss.","The inner circle talks. Observers may use the empty chair briefly."],["Swap.","A new group moves in."],["Debrief.","Observers share what they saw, and inner circles reflect."]],
+    tasks:["Stay out of the inner circle's discussion.","Use light nudges instead of taking over.","Keep observers working and the empty chair open.","Build the debrief from observers' notes."]}
 });
 /* ===================== Engine ===================== */
 const BY_ID = Object.fromEntries(SIMS.map(s=>[s.id, s]));
@@ -1373,7 +1373,7 @@ function render(){
     html = `<div class="eyebrow">All done</div><h2>That's ${esc(sim.name)}</h2>
       ${answered.length===items.length ? `<p>You chose the strongest move on the first try in ${first} of ${items.length} decisions.</p>` : `<p>You've answered ${answered.length} of ${items.length} decisions. Use the steps at the top to go back to any of them.</p>`}
       <div><h3>The steps</h3><ol class="steps-list" style="margin-top:8px">${sim.recap.steps.map(([b,t])=>`<li><b>${esc(b)}</b> ${esc(t)}</li>`).join("")}</ol></div>
-      <div><h3>Your job as the teacher</h3><ul class="list" style="margin-top:8px">${sim.recap.jobs.map(j=>`<li>${esc(j)}</li>`).join("")}</ul></div>
+      <div><h3>Your task as the teacher</h3><ul class="list" style="margin-top:8px">${sim.recap.jobs.map(j=>`<li>${esc(j)}</li>`).join("")}</ul></div>
       <div class="row navrow"><button class="btn ghost" id="back">← Back</button><button class="btn ghost" id="again">Start over</button><a class="btn" href="#">Try another technique</a></div>`;
   }
   const stage = $("stage"); stage.innerHTML = html;
