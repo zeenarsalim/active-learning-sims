@@ -572,7 +572,7 @@ SIMS.push({
        q:"One person is doing all the writing and thinking. What do you do?", opts:[
         O("Let Priya continue. Her notes are thorough and will help the group.",0,"The others disengage, and the group's analysis is really one person's."),
         O("Suggest roles for everyone: reader, note-taker, skeptic, reporter.",1,"Roles spread the work so everyone contributes and no one person carries the group."),
-        O("Quietly ask Priya to hand the pen to someone else for a while.",0,"It just moves the work to one other person. It doesn't give everyone a clear job.")]},
+        O("Quietly ask Priya to hand the pen to someone else for a while.",0,"It just moves the work to one other person. It doesn't give everyone a clear task.")]},
       {label:"Group 3", key:"attr", region:R.table(2), focus:["Fatima","Leo"],
        lines:[["Fatima","From the students' side, maybe the midterm felt unfair."],["Leo","Then attendance points wouldn't fix that."]],
        note:"This group is weighing perspectives and testing ideas against each other. Leave them to it."},
@@ -745,7 +745,7 @@ SIMS.push({
   roles:[["Actors","Hold the frozen scene."],["Director","Arranges the scene."],["Narrator","Gives a one-line caption."],["Teacher","Gives each concept in writing, supports planning, and runs the debrief."]],
   steps:[
     {kind:"learn", chip:"Assign", layout:"tables", title:"Give each group a concept",
-     text:"Each group gets one concept in writing: here, one theory of motivation. Their job is to build a frozen “living picture” with their bodies that shows the core idea.",
+     text:"Each group gets one concept in writing: here, one theory of motivation. Their task is to build a frozen “living picture” with their bodies that shows the core idea.",
      tip:"Give the concept in writing ahead of time so groups can plan.",
      chatter:[["Omar","We have to act out attribution?"],["Grace","Frozen, though. Like statues."]]},
     {kind:"decide", chip:"Assign", layout:"tables", spot:"board", title:"Set up the planning",
@@ -827,7 +827,7 @@ SIMS.push({
     {kind:"round", chip:"Tour", layout:"tour", title:"Walk the gallery",
      props:notes([3,2,3,0]),
      text:"Check on every poster.",
-     doneNote:"You've checked every poster. Your main job during a gallery tour is keeping the responses thoughtful and the posters reachable for everyone.",
+     doneNote:"You've checked every poster. Your main task during a gallery tour is keeping the responses thoughtful and the posters reachable for everyone.",
      visits:[
       {label:"Poster 1", region:R.poster(0), focus:["Maya","Jordan"],
        lines:[["Jordan","(sticks a note) Agree!"],["Maya","(sticks a note) Same!"]],
@@ -1020,7 +1020,7 @@ const FB_R1 = L_fishbowl(["Hannah","Daniel","Priya","Sam"], ["Noah","Marcus","Ai
 const FB_R2 = L_fishbowl(["Maya","Omar","Grace","Noah"], ["Hannah","Marcus","Aisha","Elena","Lena","Chris","Leo","Jordan","Fatima","Daniel","Priya","Sam"]);
 SIMS.push({
   id:"fishbowl", name:"Fishbowl", group:"moving",
-  blurb:"A small inner circle discusses while the outer circle observes with a job, then they swap.",
+  blurb:"A small inner circle discusses while the outer circle observes with a task, then they swap.",
   format:"Small group with observers", time:"",
   board:"Should grades be used to motivate students?",
   legend:[["First inner group","sdt"],["Second inner group","ev"],["Observers","attr"]],
